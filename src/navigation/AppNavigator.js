@@ -6,6 +6,8 @@ import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import FileMonitoring from '../screens/FileMonitoring';
+import TurboModule from '../screens/TurboModule';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +19,13 @@ export default function AppNavigator() {
           {() => (
             <MainLayout>
               <HomeScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="FileMonitoring">
+          {() => (
+            <MainLayout>
+              <FileMonitoring />
             </MainLayout>
           )}
         </Stack.Screen>
@@ -38,6 +47,13 @@ export default function AppNavigator() {
           {() => (
             <MainLayout>
               <SettingsScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="C++Testing">
+          {() => (
+            <MainLayout>
+              <TurboModule />
             </MainLayout>
           )}
         </Stack.Screen>

@@ -12,6 +12,21 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 
+import com.nativeapp.modules.DirectoryMonitorModule
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.NativeModule
+import com.facebook.react.uimanager.ViewManager
+
+class CustomReactPackage : ReactPackage {
+    override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
+        return listOf(DirectoryMonitorModule(reactContext))
+    }
+
+    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
+        return emptyList()
+    }
+}
+
 class MainApplication : Application(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost =
@@ -20,6 +35,7 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
+              add(CustomReactPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"

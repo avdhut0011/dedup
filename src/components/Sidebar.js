@@ -20,6 +20,12 @@ export default function Sidebar() {
       <TouchableOpacity onPress={() => navigateTo('Results')}>
         <Text style={styles.menuItem}>Results</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigateTo('FileMonitoring')}>
+        <Text style={styles.menuItem}>File Monitoring</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigateTo('C++Testing')}>
+        <Text style={styles.menuItem}>C++ Testing</Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => navigateTo('Settings')}>
         <Text style={styles.menuItem}>Settings</Text>
       </TouchableOpacity>

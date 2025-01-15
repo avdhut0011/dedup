@@ -40,6 +40,7 @@ const ScanScreen = () => {
     setIsLoading(true);
 
     const path = RNFS.ExternalStorageDirectoryPath; // Specify the directory you want to scan
+    console.log(path);
     const scannedFiles = await scanFiles(path);
 
     setFiles(scannedFiles);
