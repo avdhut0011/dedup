@@ -11,10 +11,10 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.scanButton}>
-        <Text style={styles.scanButtonText}>Scan</Text>
+        <Text style={styles.scanButtonText}>SCAN FILES</Text>
       </TouchableOpacity>
-      <Text style={styles.pastResultsTitle}>Past Results</Text>
-      <FlatList
+      <Text style={styles.pastResultsTitle}>VIEW SCAN RESULTS</Text>
+      {/* <FlatList
         data={pastResults}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -22,7 +22,13 @@ export default function HomeScreen() {
             <Text>{item.result}</Text>
           </View>
         )}
-      />
+      /> */}
+
+      {/* Dashboard Stats Box */}
+      <View style={styles.dashboardBox}>
+        <Text style={styles.dashboardTitle}>DASHBOARD STATS</Text>
+        
+      </View>
     </View>
   );
 }
@@ -35,28 +41,55 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scanButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#007AFF',
+    width: 150,
+    height: 150,
+    borderRadius: 150,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   scanButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pastResultsTitle: {
+    color: 'black',
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
+  
+    pastResultsTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: 'black',
+      backgroundColor: 'white',
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#ccc',
+      textAlign: 'center',
+      width: '90%',
+      alignSelf: 'center',
+    }
+  ,
   resultItem: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     width: '100%',
+  },
+  dashboardBox: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  dashboardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });

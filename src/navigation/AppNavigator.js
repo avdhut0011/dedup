@@ -8,6 +8,12 @@ import ResultsScreen from '../screens/ResultsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import FileMonitoring from '../screens/FileMonitoring';
 import TurboModule from '../screens/TurboModule';
+import AboutUs from '../screens/AboutUs';
+import Dashboard from '../screens/Dashboard';
+import DashboardScreen from '../screens/Dashboard';
+import AboutUsScreen from '../screens/AboutUs';
+import ContactsScreen from '../screens/Contacts';
+
 
 const Stack = createStackNavigator();
 
@@ -57,6 +63,31 @@ export default function AppNavigator() {
             </MainLayout>
           )}
         </Stack.Screen>
+
+        <Stack.Screen name="Dashboard">
+          {() => (
+            <MainLayout>
+              <DashboardScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+        
+        <Stack.Screen name="AboutUs">
+          {() => (
+            <MainLayout>
+              <AboutUsScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Contacts">
+          {() => (
+            <MainLayout>
+              <ContactsScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+
       </Stack.Navigator>
     </NavigationContainer>
   );

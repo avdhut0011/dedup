@@ -64,7 +64,9 @@ export default function FileMonitoring() {
                 ))}
             </Picker>
 
-            <Button title="Start Monitoring" onPress={startMonitoring} />
+            <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />
+
+
 
             <Text style={styles.subtitle}>Monitored Directories:</Text>
             <FlatList
@@ -85,9 +87,68 @@ export default function FileMonitoring() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-    picker: { height: 50, width: '100%', marginBottom: 20 },
-    subtitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10 },
-    monitoredDirectory: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 5 },
+    container: {
+        flex: 1,
+        backgroundColor: '#0a0e2a',
+        padding: 20,
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    picker: {
+        height: 50,
+        backgroundColor: '#1e2240',
+        color: 'white',
+        borderRadius: 10,
+        marginBottom: 20,
+        paddingHorizontal: 10,
+    },
+    startButton: {
+        backgroundColor: '#fff',  // White background
+        borderRadius: 10,
+        paddingVertical: 12,
+        marginBottom: 20,
+        width: '100%', // Full width
+      },
+    subtitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'white',
+        marginTop: 20,
+        marginBottom: 10,
+    },
+    monitoredDirectory: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#1e2240',
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    directoryText: {
+        fontSize: 16,
+        color: 'white',
+    },
+    stopButton: {
+        backgroundColor: '#ff4d4d',
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+    },
+    stopButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    noDirectoryText: {
+        fontSize: 16,
+        color: '#aaa',
+        textAlign: 'center',
+        marginTop: 20,
+    },
 });

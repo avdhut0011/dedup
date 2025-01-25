@@ -15,7 +15,7 @@ export default function Navbar({ toggleSidebar }) {
 const styles = StyleSheet.create({
   navbar: {
     height: 50,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0a0e2a',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',

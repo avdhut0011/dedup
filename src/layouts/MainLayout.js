@@ -24,7 +24,7 @@ export default function MainLayout({ children }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // Optional: Set a background color for the safe area
+    backgroundColor: '#0a0e2a', // Optional: Set a background color for the safe area
   },
   container: {
     flex: 1,
