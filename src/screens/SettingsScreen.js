@@ -1,11 +1,43 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Switch, PermissionsAndroid, Platform, Alert } from 'react-native';
 
 export default function SettingsScreen() {
   // States for toggles
   const [darkMode, setDarkMode] = useState(false);
-  const [permissions, setPermissions] = useState(false);
   const [saveLogs, setSaveLogs] = useState(false);
+  const [permissions, setPermissions] = useState({
+    read: false,
+    write: false,
+    manage: false,
+  });
+
+  useEffect(() => {
+    checkPermissions();
+  }, []);
+
+  const checkPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const readGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+        );
+        const writeGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        );
+        const manageGranted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.MANAGE_EXTERNAL_STORAGE
+        );
+
+        setPermissions({
+          read: readGranted,
+          write: writeGranted,
+          manage: manageGranted,
+        });
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,23 +56,13 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.option}>
-        <Text style={styles.optionText}>ENABLE PERMISSION</Text>
-        <Switch
-          value={permissions}
-          onValueChange={setPermissions}
-          trackColor={{ false: '#555', true: '#d32f2f' }}
-          thumbColor={permissions ? 'white' : 'gray'}
-        />
+        <Text style={styles.optionText}>READ PERMISSION: {permissions.read ? 'GRANTED' : 'DENIED'}</Text>
       </View>
-
       <View style={styles.option}>
-        <Text style={styles.optionText}>ENABLE SAVE LOGS</Text>
-        <Switch
-          value={saveLogs}
-          onValueChange={setSaveLogs}
-          trackColor={{ false: '#555', true: '#d32f2f' }}
-          thumbColor={saveLogs ? 'white' : 'gray'}
-        />
+        <Text style={styles.optionText}>WRITE PERMISSION: {permissions.write ? 'GRANTED' : 'DENIED'}</Text>
+      </View>
+      <View style={styles.option}>
+        <Text style={styles.optionText}>MANAGE PERMISSION: {permissions.manage ? 'GRANTED' : 'DENIED'}</Text>
       </View>
     </View>
   );
@@ -49,27 +71,21 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e2a',
     padding: 20,
+    backgroundColor: '#fff',
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'left',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1a1e3a',
-    padding: 15,
-    borderRadius: 12,
     marginBottom: 20,
   },
   optionText: {
-    fontSize: 16,
-    color: 'white',
+    fontSize: 18,
   },
 });
