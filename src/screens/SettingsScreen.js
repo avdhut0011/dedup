@@ -1,91 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, PermissionsAndroid, Platform, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function SettingsScreen() {
-  // States for toggles
-  const [darkMode, setDarkMode] = useState(false);
-  const [saveLogs, setSaveLogs] = useState(false);
-  const [permissions, setPermissions] = useState({
-    read: false,
-    write: false,
-    manage: false,
-  });
+const SettingsScreen = ({ selectedFolders, setSelectedFolders }) => {
+  // List of main Android storage folders
+  const mainFolders = [
+    { name: 'Download', path: 'Download' },
+    { name: 'DCIM', path: 'DCIM' },
+    { name: 'Documents', path: 'Documents' },
+    { name: 'Pictures', path: 'Pictures' },
+    { name: 'Music', path: 'Music' },
+  ];
 
-  useEffect(() => {
-    checkPermissions();
-  }, []);
-
-  const checkPermissions = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const readGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-        );
-        const writeGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-        );
-        const manageGranted = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.MANAGE_EXTERNAL_STORAGE
-        );
-
-        setPermissions({
-          read: readGranted,
-          write: writeGranted,
-          manage: manageGranted,
-        });
-      } catch (err) {
-        console.warn(err);
-      }
+  // Toggle folder selection
+  const toggleFolderSelection = (folder) => {
+    if (selectedFolders.includes(folder)) {
+      setSelectedFolders(selectedFolders.filter((f) => f !== folder));
+    } else {
+      setSelectedFolders([...selectedFolders, folder]);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Settings Heading */}
-      <Text style={styles.heading}>SETTINGS</Text>
-
-      {/* Toggle Options */}
-      <View style={styles.option}>
-        <Text style={styles.optionText}>ENABLE DARK MODE</Text>
-        <Switch
-          value={darkMode}
-          onValueChange={setDarkMode}
-          trackColor={{ false: '#555', true: '#d32f2f' }}
-          thumbColor={darkMode ? 'white' : 'gray'}
-        />
-      </View>
-
-      <View style={styles.option}>
-        <Text style={styles.optionText}>READ PERMISSION: {permissions.read ? 'GRANTED' : 'DENIED'}</Text>
-      </View>
-      <View style={styles.option}>
-        <Text style={styles.optionText}>WRITE PERMISSION: {permissions.write ? 'GRANTED' : 'DENIED'}</Text>
-      </View>
-      <View style={styles.option}>
-        <Text style={styles.optionText}>MANAGE PERMISSION: {permissions.manage ? 'GRANTED' : 'DENIED'}</Text>
-      </View>
+      <Text style={styles.title}>Select Folders to Scan:</Text>
+      {mainFolders.map((folder) => (
+        <TouchableOpacity
+          key={folder.path}
+          style={[
+            styles.folderButton,
+            selectedFolders.includes(folder.path) && styles.selectedFolderButton,
+          ]}
+          onPress={() => toggleFolderSelection(folder.path)}
+        >
+          <Text style={styles.folderText}>{folder.name}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 16,
   },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  option: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  optionText: {
+  title: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  folderButton: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedFolderButton: {
+    backgroundColor: '#ddd',
+  },
+  folderText: {
+    fontSize: 16,
   },
 });
+
+export default SettingsScreen;

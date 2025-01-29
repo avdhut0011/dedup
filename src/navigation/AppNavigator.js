@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import MainLayout from '../layouts/MainLayout';
@@ -10,17 +10,19 @@ import FileMonitoring from '../screens/FileMonitoring';
 import TurboModule from '../screens/TurboModule';
 import AboutUs from '../screens/AboutUs';
 import Dashboard from '../screens/Dashboard';
-import DashboardScreen from '../screens/Dashboard';
-import AboutUsScreen from '../screens/AboutUs';
 import ContactsScreen from '../screens/Contacts';
-
 
 const Stack = createStackNavigator();
 
-export default function AppNavigator() {
+const AppNavigator = () => {
+  // Define state variables
+  const [selectedFolders, setSelectedFolders] = useState([
+    'Download', 'DCIM', 'Documents', 'Pictures', 'Music'
+  ]);
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Home">
         <Stack.Screen name="Home">
           {() => (
             <MainLayout>
@@ -28,17 +30,10 @@ export default function AppNavigator() {
             </MainLayout>
           )}
         </Stack.Screen>
-        <Stack.Screen name="FileMonitoring">
-          {() => (
-            <MainLayout>
-              <FileMonitoring />
-            </MainLayout>
-          )}
-        </Stack.Screen>
         <Stack.Screen name="Scan">
           {() => (
             <MainLayout>
-              <ScanScreen />
+              <ScanScreen selectedFolders={selectedFolders} />
             </MainLayout>
           )}
         </Stack.Screen>
@@ -52,34 +47,38 @@ export default function AppNavigator() {
         <Stack.Screen name="Settings">
           {() => (
             <MainLayout>
-              <SettingsScreen />
+              <SettingsScreen selectedFolders={selectedFolders} setSelectedFolders={setSelectedFolders} />
             </MainLayout>
           )}
         </Stack.Screen>
-        <Stack.Screen name="C++Testing">
+        <Stack.Screen name="FileMonitoring">
+          {() => (
+            <MainLayout>
+              <FileMonitoring />
+            </MainLayout>
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="TurboModule">
           {() => (
             <MainLayout>
               <TurboModule />
             </MainLayout>
           )}
         </Stack.Screen>
-
-        <Stack.Screen name="Dashboard">
-          {() => (
-            <MainLayout>
-              <DashboardScreen />
-            </MainLayout>
-          )}
-        </Stack.Screen>
-        
         <Stack.Screen name="AboutUs">
           {() => (
             <MainLayout>
-              <AboutUsScreen />
+              <AboutUs />
             </MainLayout>
           )}
         </Stack.Screen>
-
+        <Stack.Screen name="Dashboard">
+          {() => (
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          )}
+        </Stack.Screen>
         <Stack.Screen name="Contacts">
           {() => (
             <MainLayout>
@@ -87,8 +86,9 @@ export default function AppNavigator() {
             </MainLayout>
           )}
         </Stack.Screen>
-
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
+
+export default AppNavigator;
