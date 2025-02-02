@@ -36,6 +36,7 @@
 
 // Include the NativeSampleModule header
 #include <NativeSampleModule.h>
+#include <NativeSSDeepModule.h>
 
 #ifdef REACT_NATIVE_APP_CODEGEN_HEADER
 #include REACT_NATIVE_APP_CODEGEN_HEADER
@@ -77,6 +78,9 @@ std::shared_ptr<TurboModule> cxxModuleProvider(
   // This code register the module so that when the JS side asks for it, the app can return it
   if (name == NativeSampleModule::kModuleName) {
     return std::make_shared<NativeSampleModule>(jsInvoker);
+  }
+  if (name == NativeSSDeepModule::kModuleName) {
+    return std::make_shared<NativeSSDeepModule>(jsInvoker);
   }
 
   // And we fallback to the CXX module providers autolinked

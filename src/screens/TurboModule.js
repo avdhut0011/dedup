@@ -4,37 +4,90 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   View,
+  Alert,
 } from 'react-native';
-import SampleTurboModule from '../../specs/NativeSampleModule';
+import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
+import RNFS from 'react-native-fs';
 
 export default function TurboModule() {
-  const [value, setValue] = React.useState('');
-  const [reversedValue, setReversedValue] = React.useState('');
-  const onPress = () => {
-    const revString = SampleTurboModule.reverseString(value);
-    setReversedValue(revString);
+  const [file1Path, setFile1Path] = React.useState('');
+  const [file2Path, setFile2Path] = React.useState('');
+  const [hash1, setHash1] = React.useState('');
+  const [hash2, setHash2] = React.useState('');
+  const [similarity, setSimilarity] = React.useState(null);
+
+  const pickFile = async (setFile1Path) => {
+    try {
+      setFile1Path(`${RNFS.ExternalStorageDirectoryPath}/Documents/Blockchain.pptx`)
+      setFile2Path(`${RNFS.ExternalStorageDirectoryPath}/Documents/Blockchain_Technology.pptx`)
+    } catch (err) {
+        Alert.alert('Cancelled', 'File setting error');
+        console.error(err);
+      }
+  };
+
+  const computeHash = async (filePath, setHash) => {
+    try {
+      const hash = SSDeepTurboModule.hashFile(filePath);
+      setHash(hash);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to compute file hash');
+      console.error(error);
+    }
+  };
+
+  const compareFiles = async () => {
+    if (!hash1 || !hash2) {
+      Alert.alert('Error', 'Please compute hashes for both files first');
+      return;
+    }
+
+    try {
+      const similarityPercentage = SSDeepTurboModule.compareHashes(hash1, hash2);
+      setSimilarity(similarityPercentage);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to compare file hashes');
+      console.error(error);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View>
         <Text style={styles.title}>
-          Welcome to C++ Turbo Native Module Example
+          File Hash Comparison with ssdeep
         </Text>
-        <Text style={styles.subtitle}>Write down the text you want to revert</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Write your text here"
-          onChangeText={setValue}
-          value={value}
-          placeholderTextColor="#aaa"
+
+        <Button
+          title="Set Files"
+          onPress={() => pickFile(setFile1Path)}
         />
-        <View style={styles.buttonContainer}>
-          <Button title="Reverse" onPress={onPress} color="#0a0e2a" />
-        </View>
-        <Text style={styles.reversedText}>Reversed text: {reversedValue}</Text>
+        <Text>File 1: {file1Path}</Text>
+        <Button
+          title="Compute Hash for File 1"
+          onPress={() => computeHash(file1Path, setHash1)}
+        />
+        <Text>Hash 1: {hash1}</Text>
+
+        {/* <Button
+          title="Pick File 2"
+          onPress={() => pickFile(setFile2Path)}
+        /> */}
+        <Text>File 2: {file2Path}</Text>
+        <Button
+          title="Compute Hash for File 2"
+          onPress={() => computeHash(file2Path, setHash2)}
+        />
+        <Text>Hash 2: {hash2}</Text>
+
+        <Button
+          title="Compare Hashes"
+          onPress={compareFiles}
+        />
+        {similarity !== null && (
+          <Text>Similarity: {similarity}%</Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -43,44 +96,11 @@ export default function TurboModule() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0e2a',  // Dark background color
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontSize: 18,
     marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: 'white',
-    marginBottom: 10,
-  },
-  textInput: {
-    borderColor: '#1e2240',  // Dark border color
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    width: '80%',
-    backgroundColor: '#1e2240', // Dark background for input
-    color: 'white',
-    marginTop: 10,
-  },
-  buttonContainer: {
-    marginVertical: 20,
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  reversedText: {
-    fontSize: 18,
-    color: 'white',
-    marginTop: 20,
-    fontWeight: 'bold',
   },
 });
