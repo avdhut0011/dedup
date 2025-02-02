@@ -22,7 +22,7 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home">
           {() => (
             <MainLayout>
