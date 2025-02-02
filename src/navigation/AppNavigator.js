@@ -58,7 +58,7 @@ const AppNavigator = () => {
             </MainLayout>
           )}
         </Stack.Screen>
-        <Stack.Screen name="TurboModule">
+        <Stack.Screen name="C++Testing">
           {() => (
             <MainLayout>
               <TurboModule />
