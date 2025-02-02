@@ -10,12 +10,26 @@ export default function FileMonitoring() {
     const [monitoredDirectories, setMonitoredDirectories] = useState([]);
 
     useEffect(() => {
+        // const fetchDirectories = async () => {
+        //     try {
+        //         const dirsJson = await DirectoryMonitor.getAvailableDirectories();
+        //         const dirs = JSON.parse(dirsJson);
+        //         setAvailableDirectories(dirs);
+        //         setSelectedDirectory(Object.values(dirs)[0] || '');
+        //     } catch (error) {
+        //         console.error('Error fetching directories:', error);
+        //     }
+        // };
         const fetchDirectories = async () => {
             try {
+                // const dirsJson = await DirectoryMonitor.getRootDirectory();
                 const dirsJson = await DirectoryMonitor.getAvailableDirectories();
+                // console.log(dirsJson)
                 const dirs = JSON.parse(dirsJson);
                 setAvailableDirectories(dirs);
-                setSelectedDirectory(Object.values(dirs)[0] || '');
+                // console.log(availableDirectories)
+                setSelectedDirectory(Object.values(dirsJson)[0] || '');
+                // setSelectedDirectory(dirsJson);
             } catch (error) {
                 console.error('Error fetching directories:', error);
             }
@@ -59,9 +73,10 @@ export default function FileMonitoring() {
                 style={styles.picker}
                 onValueChange={(itemValue) => setSelectedDirectory(itemValue)}
             >
-                {Object.entries(availableDirectories).map(([key, value]) => (
+                <Picker.Item key={9999} label={'root'} value={'/storage/emulated/0'} />
+                {/* {Object.entries(availableDirectories).map(([key, value]) => (
                     <Picker.Item key={key} label={key} value={value} />
-                ))}
+                ))} */}
             </Picker>
 
             <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />

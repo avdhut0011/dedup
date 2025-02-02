@@ -11,11 +11,18 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.facebook.react.bridge.Promise;
 import android.os.Environment;
 
 public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     private static final String TAG = "DirectoryMonitor";
+    private final Set<String> allowedExtensions = new HashSet<>(Arrays.asList(
+            ".txt", ".pdf", ".doc", ".docx", ".pptx",
+            ".csv", ".xlsx", ".mkv", ".mp3", ".mp4"));
     private final Map<String, FileObserver> fileObservers = new HashMap<>();
 
     public DirectoryMonitorModule(ReactApplicationContext reactContext) {
@@ -62,7 +69,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     private void monitorDirectoryTree(String directoryPath) {
         File root = new File(directoryPath);
         createFileObserver(directoryPath); // Pass the directory path as a string
-    
+
         // Traverse subdirectories
         File[] subDirs = root.listFiles(File::isDirectory);
         if (subDirs != null) {
@@ -72,23 +79,42 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
         }
     }
 
+    private final Map<String, Long> recentCreations = new HashMap<>();
+
     private void createFileObserver(String path) {
-        if (fileObservers.containsKey(path)) return; // Avoid duplicate monitoring
+        if (fileObservers.containsKey(path))
+            return; // Avoid duplicate monitoring
 
         FileObserver observer = new FileObserver(path, FileObserver.ALL_EVENTS) {
             @Override
             public void onEvent(int event, String fileName) {
-                if (fileName == null) return;
+                if (fileName == null)
+                    return;
+
+                String fileExtension = getFileExtension(fileName);
+                if (!allowedExtensions.contains(fileExtension)) {
+                    return; // Ignore files with disallowed extensions
+                }
+
+                String filePath = path + "/" + fileName;
 
                 String eventType = "";
                 switch (event) {
                     case FileObserver.CREATE:
                         eventType = "CREATE";
+                        recentCreations.put(filePath, System.currentTimeMillis());
                         break;
                     case FileObserver.DELETE:
                         eventType = "DELETE";
                         break;
                     case FileObserver.MODIFY:
+                        // eventType = "MODIFY";
+                        // break;
+                        // Ignore MODIFY events shortly after CREATE
+                        Long creationTime = recentCreations.get(filePath);
+                        if (creationTime != null && System.currentTimeMillis() - creationTime < 1000) {
+                            return;
+                        }
                         eventType = "MODIFY";
                         break;
                     case FileObserver.MOVED_FROM:
@@ -100,7 +126,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
                 }
 
                 if (!eventType.isEmpty()) {
-                    String filePath = path + "/" + fileName;
+                    // String filePath = path + "/" + fileName;
                     sendEvent(eventType, filePath);
 
                     // If a new directory is created, monitor it recursively
@@ -119,8 +145,8 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     private void sendEvent(String eventType, String filePath) {
         if (getReactApplicationContext().hasActiveCatalystInstance()) {
             getReactApplicationContext()
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("FileChangeEvent", eventType + ":" + filePath);
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("FileChangeEvent", eventType + ":" + filePath);
         }
     }
 
@@ -128,29 +154,40 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     public void getAvailableDirectories(Promise promise) {
         try {
             Map<String, String> directories = new HashMap<>();
-            // directories.put("Downloads", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-            // directories.put("Documents", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
-            // directories.put("Pictures", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath());
-            // directories.put("Music", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
-            // directories.put("Movies", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
 
-            File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File documents = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-            File pictures = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-            File music = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-            File movies = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+            // Root Storage Directory (Internal Storage Root)
+            directories.put("Root", Environment.getExternalStorageDirectory().getAbsolutePath());
 
-            if (downloads.exists()) directories.put("Downloads", downloads.getAbsolutePath());
-            if (documents.exists()) directories.put("Documents", documents.getAbsolutePath());
-            if (pictures.exists()) directories.put("Pictures", pictures.getAbsolutePath());
-            if (music.exists()) directories.put("Music", music.getAbsolutePath());
-            if (movies.exists()) directories.put("Movies", movies.getAbsolutePath());
-
+            directories.put("Downloads", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+            directories.put("Documents", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
+            directories.put("Pictures", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath());
+            directories.put("Music", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
+            directories.put("Movies", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
 
             promise.resolve(new org.json.JSONObject(directories).toString());
             // promise.resolve(directories);
         } catch (Exception e) {
             promise.reject("Error", e.getMessage());
         }
+    }
+    
+    @ReactMethod
+    public void getRootDirectory(Promise promise) {
+        try {
+            File rootDirectory = Environment.getExternalStorageDirectory();
+            if (rootDirectory != null && rootDirectory.exists()) {
+                promise.resolve(rootDirectory.getAbsolutePath());
+            } else {
+                promise.reject("RootDirectoryError", "Root directory does not exist or is inaccessible.");
+            }
+        } catch (Exception e) {
+            promise.reject("RootDirectoryError", e.getMessage());
+        }
+    }
+
+
+    private String getFileExtension(String fileName) {
+        int lastIndex = fileName.lastIndexOf(".");
+        return (lastIndex == -1) ? "" : fileName.substring(lastIndex).toLowerCase();
     }
 }
