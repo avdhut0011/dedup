@@ -11,6 +11,8 @@ import TurboModule from '../screens/TurboModule';
 import AboutUs from '../screens/AboutUs';
 import Dashboard from '../screens/Dashboard';
 import ContactsScreen from '../screens/Contacts';
+import MainLogic from '../screens/MainLogic';
+import InitialScan from '../screens/InitialScan';
 
 const Stack = createStackNavigator();
 
@@ -33,7 +35,8 @@ const AppNavigator = () => {
         <Stack.Screen name="Scan">
           {() => (
             <MainLayout>
-              <ScanScreen selectedFolders={selectedFolders} />
+              {/* <ScanScreen selectedFolders={selectedFolders} /> */}
+              <InitialScan />
             </MainLayout>
           )}
         </Stack.Screen>
@@ -61,7 +64,8 @@ const AppNavigator = () => {
         <Stack.Screen name="C++Testing">
           {() => (
             <MainLayout>
-              <TurboModule />
+              {/* <TurboModule /> */}
+              <MainLogic />
             </MainLayout>
           )}
         </Stack.Screen>
