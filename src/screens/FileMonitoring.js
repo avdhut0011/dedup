@@ -39,12 +39,12 @@ export default function FileMonitoring() {
     }, []);
 
     useEffect(() => {
-        const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-        const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
-            console.log('File change detected:', event);
-        });
+        // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
+        // const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
+        //     console.log('File change detected:', event);
+        // });
 
-        return () => subscription.remove();
+        // return () => subscription.remove();
     }, []);
 
     const startMonitoring = () => {
