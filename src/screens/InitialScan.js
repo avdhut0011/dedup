@@ -32,24 +32,59 @@ export default function InitialScan() {
         binary: ['.pdf', '.docx', '.doc', '.pptx', '.ppt'],
         audio: ['.mp3', '.wav'],
         video: ['.mp4', '.mkv'],
-        image: ['.jpg', '.png', '.gif'],
+        image: ['.jpg', '.png'],
     };
     const scanFilesInCategory = async (category, extensions) => {
         const files = [];
-        const directories = [`${RNFS.ExternalStorageDirectoryPath}/Documents`]; // Start with the root directory
+        const directories = [`${RNFS.ExternalStorageDirectoryPath}`]; // Start from root directory
+        // Define ignored directories
+        const ignoredPrefixes = [
+            'com.',        // App-specific directories
+            'cn.',         // App-specific directories
+            '.cache',      // Cache directories
+            'cache',      // Cache directories
+            '.temp',       // Temporary files
+            '.thumbnails', // Thumbnail cache
+            'Android',     // System app data (Android/data,
+            //  Android/obb)
+            'MIUI',        // Xiaomi-specific system files
+            'LOST.DIR',    // Recovered lost files
+            'DCIM/.thumbnails', // Image thumbnails
+            'Recycle.Bin', // Windows-style recycle bin
+            '.Trash',      // Trash folder (Linux/Android)
+            '.nomedia',    // Prevents media scanning
+            'System Volume Information', // Windows system files
+            'Alarms',      // Alarm sounds
+            'Notifications', // Notification sounds
+            'Ringtones',   // Ringtone sounds
+            // 'Movies',      // Pre-installed system movies
+            // 'Music',       // Pre-installed system music
+            'Podcasts'     // Pre-installed system podcasts
+        ];
+        
         while (directories.length > 0) {
             const currentDir = directories.pop();
-            const items = await RNFS.readDir(currentDir);
-            for (const item of items) {
-                if (item.isDirectory()) {
-                    directories.push(item.path); // Add subdirectories to the list
-                } else if (extensions.some((ext) => item.name.endsWith(ext))) {
-                    files.push(item.path); // Add files that match the category
+            // Check if current directory should be ignored
+            if (ignoredPrefixes.some(prefix => currentDir.split('/').pop().startsWith(prefix))) {
+                console.log(`Skipping: ${currentDir}`);
+                continue; // Skip this directory
+            }
+            try {
+                const items = await RNFS.readDir(currentDir);
+                for (const item of items) {
+                    if (item.isDirectory()) {
+                        directories.push(item.path); // Add non-ignored directories
+                    } else if (extensions.some(ext => item.name.endsWith(ext))) {
+                        files.push(item.path); // Add files that match the category
+                    }
                 }
+            } catch (error) {
+                console.warn(`Error accessing ${currentDir}: ${error.message}`);
             }
         }
         return files;
     };
+    
     const insertHashIntoDatabase = (filePath, hash, filetype) => {
         return new Promise((resolve, reject) => {
             db.transaction((tx) => {
@@ -83,6 +118,7 @@ export default function InitialScan() {
         });
     };
     const processFilesInCategory = async (category, files) => {
+        console.log('in processFilesInCategory:' + category)
         const hashes = [];
         const duplicates = [];
         for (const file of files) {
@@ -103,6 +139,7 @@ export default function InitialScan() {
         for (const [category, extensions] of Object.entries(fileCategories)) {
             const files = await scanFilesInCategory(category, extensions);
             const { hashes, duplicates } = await processFilesInCategory(category, files);
+            console.log('processFilesInCategory done for:' + extensions)
             results[category] = {
                 totalFiles: files.length,
                 duplicates: duplicates.length,
@@ -115,6 +152,7 @@ export default function InitialScan() {
         return results;
     };
     const updateProgress = (category, totalFilesCount, duplicates, duplicateFiles) => {
+        console.log(`Scanned ${totalFiles} ${category} files. Found ${duplicates} duplicates.`);
         setCategories((prev) => ({
             ...prev,
             [category]: {
