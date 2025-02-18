@@ -231,7 +231,7 @@ export default function MainLogic() {
     };
     useEffect(() => {
         // fetchKnownFiles();
-        // initializeDatabase();
+        initializeDatabase();
     }, []);
     useEffect(() => {
         const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);

@@ -13,10 +13,12 @@ export default function InitialScan() {
     const [progress, setProgress] = useState(0); // Overall progress (0 to 1)
     const [categories, setCategories] = useState({
         text: { totalFiles: 0, duplicates: 0, scanned: 0 },
-        binary: { totalFiles: 0, duplicates: 0, scanned: 0 },
+        pptx: { totalFiles: 0, duplicates: 0, scanned: 0 },
+        documents: { totalFiles: 0, duplicates: 0, scanned: 0 },
         audio: { totalFiles: 0, duplicates: 0, scanned: 0 },
-        video: { totalFiles: 0, duplicates: 0, scanned: 0 },
+        pdfs: { totalFiles: 0, duplicates: 0, scanned: 0 },
         image: { totalFiles: 0, duplicates: 0, scanned: 0 },
+        video: { totalFiles: 0, duplicates: 0, scanned: 0 },
     });
     const startScan = async () => {
         setIsScanning(true);
@@ -29,24 +31,25 @@ export default function InitialScan() {
     };
     const fileCategories = {
         text: ['.txt'],
-        binary: ['.pdf', '.docx', '.doc', '.pptx', '.ppt'],
+        pptx: ['.ppt', '.pptx'],
+        documents: ['.docx', '.doc'],
         audio: ['.mp3', '.wav'],
-        video: ['.mp4', '.mkv'],
-        image: ['.jpg', '.png'],
+        pdfs: ['.pdf'],
+        // video: ['.mp4', '.mkv'],
+        // image: ['.jpg', '.png'],
     };
     const scanFilesInCategory = async (category, extensions) => {
         const files = [];
-        const directories = [`${RNFS.ExternalStorageDirectoryPath}`]; // Start from root directory
+        const directories = [`${RNFS.ExternalStorageDirectoryPath}/Download`]; // Start from root directory
         // Define ignored directories
         const ignoredPrefixes = [
-            'com.',        // App-specific directories
+            // 'com.',        // App-specific directories
             'cn.',         // App-specific directories
             '.cache',      // Cache directories
             'cache',      // Cache directories
             '.temp',       // Temporary files
             '.thumbnails', // Thumbnail cache
-            'Android',     // System app data (Android/data,
-            //  Android/obb)
+            '.trashed',     // 
             'MIUI',        // Xiaomi-specific system files
             'LOST.DIR',    // Recovered lost files
             'DCIM/.thumbnails', // Image thumbnails
@@ -57,11 +60,11 @@ export default function InitialScan() {
             'Alarms',      // Alarm sounds
             'Notifications', // Notification sounds
             'Ringtones',   // Ringtone sounds
-            // 'Movies',      // Pre-installed system movies
-            // 'Music',       // Pre-installed system music
+            'obb',      // Pre-installed system 
+            'data',       // Pre-installed system 
             'Podcasts'     // Pre-installed system podcasts
         ];
-        
+        console.log(directories)
         while (directories.length > 0) {
             const currentDir = directories.pop();
             // Check if current directory should be ignored
@@ -71,6 +74,7 @@ export default function InitialScan() {
             }
             try {
                 const items = await RNFS.readDir(currentDir);
+                // console.log(items)
                 for (const item of items) {
                     if (item.isDirectory()) {
                         directories.push(item.path); // Add non-ignored directories
@@ -85,7 +89,7 @@ export default function InitialScan() {
         return files;
     };
     
-    const insertHashIntoDatabase = (filePath, hash, filetype) => {
+    const insertHashIntoDatabase = (filePath, hash, filetype, fileName, fileSizeKB) => {
         return new Promise((resolve, reject) => {
             db.transaction((tx) => {
                 tx.executeSql(
@@ -118,26 +122,40 @@ export default function InitialScan() {
         });
     };
     const processFilesInCategory = async (category, files) => {
-        console.log('in processFilesInCategory:' + category)
+        console.log('In processFilesInCategory: ' + category);
         const hashes = [];
         const duplicates = [];
         for (const file of files) {
-            const hash = await SSDeepTurboModule.hashFile(file);
-            const existingHashes = await fetchHashesFromDatabase(category);
-            const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, 50);
-            if (results.length > 0) {
-                duplicates.push({ file, similarity: results[0].similarity });
-            } else {
-                await insertHashIntoDatabase(file, hash, category);
+            try {
+                // Get file metadata (size, name)
+                const fileInfo = await RNFS.stat(file);
+                const fileSizeKB = (fileInfo.size / 1024).toFixed(2); // Convert to KB
+                const fileName = file.split('/').pop(); // Extract file name
+                console.log(fileName)
+                // Compute SSDeep hash
+                const hash = await SSDeepTurboModule.hashFile(file);
+                // Fetch existing hashes for this category
+                const existingHashes = await fetchHashesFromDatabase(category);
+                // Compare the hash with existing hashes
+                const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, 55);
+                if (results.length > 0) {
+                    duplicates.push({ file, similarity: results[0].similarity });
+                } else {
+                    // Insert into database with file details
+                    await insertHashIntoDatabase(file, hash, category, fileName, fileSizeKB);
+                }
+                hashes.push({ file, hash });
+            } catch (error) {
+                console.warn(`Error processing file: ${file}, ${error.message}`);
             }
-            hashes.push({ file, hash });
         }
         return { hashes, duplicates };
-    };
+    };    
     const performInitialScan = async () => {
         const results = {};
         for (const [category, extensions] of Object.entries(fileCategories)) {
             const files = await scanFilesInCategory(category, extensions);
+            console.log(files)
             const { hashes, duplicates } = await processFilesInCategory(category, files);
             console.log('processFilesInCategory done for:' + extensions)
             results[category] = {
@@ -146,13 +164,14 @@ export default function InitialScan() {
                 duplicateFiles: duplicates, // Store duplicates
                 files: hashes,
             };
+            console.log(results)
             // Update UI with progress
-            updateProgress(category, files.length, duplicates.length, duplicates);
+            await updateProgress(category, files.length, duplicates.length, duplicates);
         }
         return results;
     };
     const updateProgress = (category, totalFilesCount, duplicates, duplicateFiles) => {
-        console.log(`Scanned ${totalFiles} ${category} files. Found ${duplicates} duplicates.`);
+        // console.log(`Scanned ${totalFiles} ${category} files. Found ${duplicates} duplicates.`)
         setCategories((prev) => ({
             ...prev,
             [category]: {
