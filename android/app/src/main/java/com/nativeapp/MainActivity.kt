@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -50,7 +51,9 @@ class MainActivity : ReactActivity() {
      * Check if the required permissions are granted.
      */
     private fun hasRequiredPermissions(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_MEDIA_IMAGES
@@ -72,13 +75,26 @@ class MainActivity : ReactActivity() {
             return
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+: Request MANAGE_EXTERNAL_STORAGE permission
+            requestManageAllFilesPermission()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Android 13+: Request granular permissions
             requestMediaPermission.launch(Manifest.permission.READ_MEDIA_IMAGES)
         } else {
             // Android 12 and lower: Legacy permission
             requestLegacyPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
+    }
+
+    /**
+     * Request MANAGE_EXTERNAL_STORAGE permission.
+     */
+    private fun requestManageAllFilesPermission() {
+        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+            data = Uri.parse("package:$packageName")
+        }
+        startActivity(intent)
     }
 
     /**
