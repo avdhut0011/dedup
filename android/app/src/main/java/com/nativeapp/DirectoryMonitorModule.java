@@ -21,8 +21,34 @@ import android.os.Environment;
 public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     private static final String TAG = "DirectoryMonitor";
     private final Set<String> allowedExtensions = new HashSet<>(Arrays.asList(
-            ".txt", ".pdf", ".doc", ".docx", ".pptx",
+            ".txt", ".pdf", ".doc", ".docx", ".pptx", ".ppt",
             ".csv", ".xlsx", ".mkv", ".mp3", ".mp4"));
+    private static final Set<String> ignoreFolders = new HashSet<>(Arrays.asList(
+            "com.", // App-specific directories
+            "cn.", // App-specific directories
+            ".cache", // Cache directories
+            "cache", // Cache directories
+            ".temp", // Temporary files
+            ".thumbnails", // Thumbnail cache
+            ".Thumbs", // Thumbnail cache
+            ".StickerThumbs", // Thumbnail cache
+            ".trashed",
+            ".globalTrash",
+            ".system_config",
+            "MIUI", // Xiaomi-specific system files
+            "LOST.DIR", // Recovered lost files
+            "DCIM/.thumbnails", // Image thumbnails
+            "Recycle.Bin", // Windows-style recycle bin
+            ".trash", // Trash folder (Linux/Android)
+            ".nomedia", // Prevents media scanning
+            "System Volume Information", // Windows system files
+            "Alarms", // Alarm sounds
+            "Notifications", // Notification sounds
+            "Ringtones", // Ringtone sounds
+            "obb", // Pre-installed system
+            "data", // Pre-installed system
+            "Podcasts" // Pre-installed system podcasts
+    ));
     private final Map<String, FileObserver> fileObservers = new HashMap<>();
 
     public DirectoryMonitorModule(ReactApplicationContext reactContext) {
@@ -36,6 +62,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void startMonitoring(String directoryPath) {
+        // sendEvent("Starting... folder: ",directoryPath);
         stopMonitoring(directoryPath); // Ensure no duplicate monitoring for the same path
 
         File directory = new File(directoryPath);
@@ -68,8 +95,18 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
 
     private void monitorDirectoryTree(String directoryPath) {
         File root = new File(directoryPath);
-        createFileObserver(directoryPath); // Pass the directory path as a string
 
+        // Extract folder name from the path
+        String folderName = root.getName();
+
+        // Check if the folder should be ignored
+        for (String ignoreFolder : ignoreFolders) {
+            if (folderName.startsWith(ignoreFolder) || folderName.equalsIgnoreCase(ignoreFolder)) {
+                Log.d(TAG, "Ignoring folder: " + directoryPath);
+                return; // Skip monitoring this folder
+            }
+        }
+        createFileObserver(directoryPath); // Start monitoring the allowed directory
         // Traverse subdirectories
         File[] subDirs = root.listFiles(File::isDirectory);
         if (subDirs != null) {
@@ -77,6 +114,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
                 monitorDirectoryTree(subDir.getAbsolutePath()); // Recursively monitor subdirectories
             }
         }
+        sendEvent("MonitoringEvent", directoryPath);
     }
 
     private final Map<String, Long> recentCreations = new HashMap<>();
@@ -158,11 +196,16 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             // Root Storage Directory (Internal Storage Root)
             directories.put("Root", Environment.getExternalStorageDirectory().getAbsolutePath());
 
-            directories.put("Downloads", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-            directories.put("Documents", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
-            directories.put("Pictures", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath());
-            directories.put("Music", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
-            directories.put("Movies", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
+            directories.put("Downloads",
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
+            directories.put("Documents",
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
+            directories.put("Pictures",
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath());
+            directories.put("Music",
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
+            directories.put("Movies",
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
 
             promise.resolve(new org.json.JSONObject(directories).toString());
             // promise.resolve(directories);
@@ -170,7 +213,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             promise.reject("Error", e.getMessage());
         }
     }
-    
+
     @ReactMethod
     public void getRootDirectory(Promise promise) {
         try {
@@ -184,7 +227,6 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             promise.reject("RootDirectoryError", e.getMessage());
         }
     }
-
 
     private String getFileExtension(String fileName) {
         int lastIndex = fileName.lastIndexOf(".");

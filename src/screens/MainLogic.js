@@ -377,6 +377,14 @@ export default function MainLogic() {
             );
         });
     };
+    const truncateInitDb = () => {
+        db.transaction((tx) => {
+            tx.executeSql('DELETE FROM Initial_Scan_Results', [],
+                () => console.log('All records from "Initial_Scan_Results" table have been cleared.'),
+                (error) => console.error('Error clearing "files" table:', error)
+            );
+        });
+    };
     const deleteFileRecord = (filePath) => {
         db.transaction((tx) => {
           // First, get the file ID from Files_Record
@@ -415,6 +423,7 @@ export default function MainLogic() {
         // fetchKnownFiles();
         // dropTable();
         // initializeDatabase();
+        // truncateInitDb();
     }, []);
     useEffect(() => {
         const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);

@@ -10,41 +10,27 @@ export default function FileMonitoring() {
     const [monitoredDirectories, setMonitoredDirectories] = useState([]);
 
     useEffect(() => {
-        // const fetchDirectories = async () => {
-        //     try {
-        //         const dirsJson = await DirectoryMonitor.getAvailableDirectories();
-        //         const dirs = JSON.parse(dirsJson);
-        //         setAvailableDirectories(dirs);
-        //         setSelectedDirectory(Object.values(dirs)[0] || '');
-        //     } catch (error) {
-        //         console.error('Error fetching directories:', error);
-        //     }
-        // };
         const fetchDirectories = async () => {
             try {
                 // const dirsJson = await DirectoryMonitor.getRootDirectory();
                 const dirsJson = await DirectoryMonitor.getAvailableDirectories();
-                // console.log(dirsJson)
                 const dirs = JSON.parse(dirsJson);
                 setAvailableDirectories(dirs);
-                // console.log(availableDirectories)
-                setSelectedDirectory(Object.values(dirsJson)[0] || '');
-                // setSelectedDirectory(dirsJson);
+                console.log(dirs)
+                setSelectedDirectory(Object.values(dirs)[0] || '');
             } catch (error) {
                 console.error('Error fetching directories:', error);
             }
         };
-
         fetchDirectories();
     }, []);
 
     useEffect(() => {
-        // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-        // const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
-        //     console.log('File change detected:', event);
-        // });
-
-        // return () => subscription.remove();
+        const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
+        const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
+            console.log('File Change Detected:', event);
+        });
+        return () => subscription.remove();
     }, []);
 
     const startMonitoring = () => {
@@ -73,10 +59,10 @@ export default function FileMonitoring() {
                 style={styles.picker}
                 onValueChange={(itemValue) => setSelectedDirectory(itemValue)}
             >
-                <Picker.Item key={9999} label={'root'} value={'/storage/emulated/0'} />
-                {/* {Object.entries(availableDirectories).map(([key, value]) => (
+                {/* <Picker.Item key={9999} label={'root'} value={'/storage/emulated/0'} /> */}
+                {Object.entries(availableDirectories).map(([key, value]) => (
                     <Picker.Item key={key} label={key} value={value} />
-                ))} */}
+                ))}
             </Picker>
 
             <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />
