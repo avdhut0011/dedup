@@ -26,11 +26,11 @@ export default function FileMonitoring() {
     }, []);
 
     useEffect(() => {
-        // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-        // const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
-        //     console.log('File Change Detected:', event);
-        // });
-        // return () => subscription.remove();
+        const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
+        const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
+            console.log('File Change Detected:', event);
+        });
+        return () => subscription.remove();
     }, []);
 
     const startMonitoring = () => {
