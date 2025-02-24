@@ -5,11 +5,14 @@ import RNFS from 'react-native-fs';
 import SQLite from 'react-native-sqlite-storage';
 import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
 import ScanProgressUI from '../components/ScanProgressUI';
+import { useNavigation } from '@react-navigation/native';
 
 const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
 
 export default function InitialScan() {
   const [scanBtnText, setScanBtnText] = useState('Start Initial Scan');
+  const [scanCompleted, setScanCompleted] = useState(false); // Track scan completion
+  const navigation = useNavigation(); // Use navigation
   const [isScanning, setIsScanning] = useState(false);
   const [categoriesFinished, setCategoriesFinished] = useState([]);
   const [progress, setProgress] = useState(0); // Overall progress (0 to 1)
@@ -22,16 +25,46 @@ export default function InitialScan() {
     image: { totalFiles: 0, duplicates: 0, scanned: 0 },
     video: { totalFiles: 0, duplicates: 0, scanned: 0 },
   });
-  const startScan = async () => {
-    setIsScanning(true);
-    const isFirstLaunch = await checkFirstLaunch();
-    if (isFirstLaunch == false) {
-      const results = await performInitialScan();
-      console.log('Initial scan completed:', results);
-      insertInitialScanResults(results);
+  const checkFirstLaunch = async () => {
+    const isFirstLaunch = await AsyncStorage.getItem('isFirstLaunch');
+    if (isFirstLaunch === null) {
+      await AsyncStorage.setItem('isFirstLaunch', 'false');
+      console.log('First Launch: True');
+      return true;
     }
-    setScanBtnText('Done')
+    console.log('First Launch: False');
+    return false;
+  };
+  const startScan = async () => {
+    console.log('IN startScan')
+    setIsScanning(true);
+    // const isFirstLaunch = await checkFirstLaunch();
+    // if (isFirstLaunch) {
+      const results = await performInitialScan();
+      console.log("Initial scan completed:", results);
+      insertInitialScanResults(results);
+      // Update button to "Results"
+      setScanBtnText("Results");
+      setScanCompleted(true);
+    // }
     setIsScanning(false);
+  };
+  useEffect(() => {
+    // Check if the scan was completed in the past and update UI accordingly
+    checkFirstLaunch().then((isFirstLaunch) => {
+      if (!isFirstLaunch) {
+        setScanBtnText("Results");
+        setScanCompleted(true);
+      }
+    });
+  }, []);
+  const handleButtonPress = () => {
+    if (scanCompleted) {
+      // Navigate to Results screen if scan is completed
+      navigation.navigate("Results");
+    } else {
+      startScan();
+    }
   };
   const fileCategories = {
     text: ['.txt'],
@@ -267,18 +300,6 @@ export default function InitialScan() {
     });
   };
 
-
-  const checkFirstLaunch = async () => {
-    const isFirstLaunch = await AsyncStorage.getItem('isFirstLaunch');
-    if (isFirstLaunch === null) {
-      await AsyncStorage.setItem('isFirstLaunch', 'false');
-      console.log('First Launch: True');
-      return true;
-    }
-    console.log('First Launch: False');
-    return false;
-  };
-
   useEffect(() => {
     // getFilesDistribution();
   }, [])
@@ -288,8 +309,8 @@ export default function InitialScan() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScanProgressUI progress={progress} categories={categories} />
       <Button
-        title={isScanning ? 'Scanning...' : scanBtnText}
-        onPress={startScan}
+        title={isScanning ? "Scanning..." : scanBtnText}
+        onPress={handleButtonPress}
         disabled={isScanning}
       />
     </SafeAreaView>
