@@ -1,108 +1,136 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 
 export default function ContactsScreen() {
   const [name, setName] = useState('');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [message, setMessage] = useState('');
 
+  const handleSubmit = () => {
+    if (!name || !emailOrPhone || !message) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    // Simulate form submission
+    Alert.alert('Success', 'Your feedback has been submitted!', [
+      { text: 'OK', onPress: () => {
+        setName('');
+        setEmailOrPhone('');
+        setMessage('');
+      }},
+    ]);
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       {/* Heading */}
-      <Text style={styles.heading}>CONTACT</Text>
+      <Text style={styles.heading}>CONTACT US</Text>
 
       {/* Contact Details */}
-      <Text style={styles.contactText}>EMAIL : XYZ@GMAIL.COM</Text>
-      <Text style={styles.contactText}>CONTACT NO : 253 3XXXX</Text>
+      <View style={styles.contactDetails}>
+        <Text style={styles.contactText}>📧 EMAIL: support@dedup.com</Text>
+        <Text style={styles.contactText}>📞 CONTACT NO: 253 3XXXX</Text>
+      </View>
 
       {/* Feedback Form */}
-      <Text style={styles.feedbackHeading}>FEEDBACK FORM :</Text>
+      <Text style={styles.feedbackHeading}>FEEDBACK FORM</Text>
 
-      <Text style={styles.label}>NAME :</Text>
-      <TextInput 
-        style={styles.input} 
-        value={name} 
-        onChangeText={setName} 
-        placeholder="Enter your name" 
-        placeholderTextColor="#aaa" 
+      {/* Name Input */}
+      <Text style={styles.label}>NAME</Text>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+        placeholder="Enter your name"
+        placeholderTextColor="#aaa"
       />
 
-      <Text style={styles.label}>EMAIL / PHONE NO :</Text>
-      <TextInput 
-        style={styles.input} 
-        value={emailOrPhone} 
-        onChangeText={setEmailOrPhone} 
-        placeholder="Enter email or phone" 
-        placeholderTextColor="#aaa" 
+      {/* Email/Phone Input */}
+      <Text style={styles.label}>EMAIL / PHONE NO</Text>
+      <TextInput
+        style={styles.input}
+        value={emailOrPhone}
+        onChangeText={setEmailOrPhone}
+        placeholder="Enter email or phone"
+        placeholderTextColor="#aaa"
+        keyboardType="email-address"
       />
 
-      <Text style={styles.label}>MESSAGE :</Text>
-      <TextInput 
-        style={[styles.input, styles.messageBox]} 
-        value={message} 
-        onChangeText={setMessage} 
-        placeholder="Enter your message" 
-        placeholderTextColor="#aaa" 
+      {/* Message Input */}
+      <Text style={styles.label}>MESSAGE</Text>
+      <TextInput
+        style={[styles.input, styles.messageBox]}
+        value={message}
+        onChangeText={setMessage}
+        placeholder="Enter your message"
+        placeholderTextColor="#aaa"
         multiline
       />
 
       {/* Submit Button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>SUBMIT</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#0a0e2a',
     padding: 20,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 15,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  contactDetails: {
+    marginBottom: 20,
   },
   contactText: {
     fontSize: 16,
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   feedbackHeading: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: 'white',
     marginTop: 20,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     color: 'white',
     marginTop: 10,
+    marginBottom: 5,
   },
   input: {
     backgroundColor: '#1a1e3a',
     color: 'white',
     padding: 12,
     borderRadius: 8,
-    marginTop: 5,
+    marginBottom: 15,
+    fontSize: 16,
   },
   messageBox: {
-    height: 80,
+    height: 120,
     textAlignVertical: 'top',
   },
   button: {
-    backgroundColor: 'white',
-    paddingVertical: 12,
+    backgroundColor: '#00bcd4', // Light blue for emphasis
+    paddingVertical: 15,
     borderRadius: 8,
     marginTop: 20,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#0a0e2a',
+    color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },

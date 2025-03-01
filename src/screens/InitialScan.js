@@ -77,7 +77,7 @@ export default function InitialScan() {
   };
   const scanFilesInCategory = async (category, extensions) => {
     const files = [];
-    const directories = [`${RNFS.ExternalStorageDirectoryPath}/Documents`]; // Start from root directory
+    const directories = [`${RNFS.ExternalStorageDirectoryPath}/duplicates`]; // Start from root directory
     // Define ignored directories
     const ignoredPrefixes = [
       'com.',        // App-specific directories
@@ -189,8 +189,11 @@ export default function InitialScan() {
       });
     });
   };
-  const processFilesInCategory = async (category, files) => {
-    console.log('In processFilesInCategory: ' + category);
+  const getFileExtension = filePath => {
+    return filePath.split('.').pop().toLowerCase();
+  };
+  const processFilesInCategory = async (filetype, files) => {
+    console.log('In processFilesInCategory: ' + filetype);
     const hashes = [];
     const duplicates = [];
     for (const file of files) {
@@ -199,13 +202,14 @@ export default function InitialScan() {
         const fileInfo = await RNFS.stat(file);
         const fileSizeKB = (fileInfo.size / 1024).toFixed(2); // Convert to KB
         const fileName = file.split('/').pop(); // Extract file name
+        const extension = await getFileExtension(file);
         console.log(fileName);
         // Compute SSDeep hash
         const hash = await SSDeepTurboModule.hashFile(file);
         // Fetch existing hashes for this category
-        const existingHashes = await fetchHashesFromDatabase(category);
+        const existingHashes = await fetchHashesFromDatabase(extension);
         // Compare the hash with existing hashes
-        const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, 55);
+        const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, 10);
         if (results.length > 0) {
           // Duplicate(s) found
           for (const result of results) {
@@ -214,15 +218,14 @@ export default function InitialScan() {
             // Fetch the original file's ID from the database
             const originalFileId = await fetchFileIdByHash(originalFileHash);
             // Insert the duplicate file into Files_Record
-            const duplicateFileId = await insertHashIntoDatabase(file, hash, category, fileName, fileSizeKB);
+            const duplicateFileId = await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
             // Insert the duplicate relationship into Duplicates_Record
             await insertHashIntoDuplicates(originalFileId, duplicateFileId, similarityScore);
             duplicates.push({ file, similarity: similarityScore });
           }
         } else {
           // No duplicates found, insert into Files_Record
-          console.log('in else, inserting')
-          await insertHashIntoDatabase(file, hash, category, fileName, fileSizeKB);
+          await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
         }
         hashes.push({ file, hash });
       } catch (error) {
@@ -237,7 +240,7 @@ export default function InitialScan() {
     for (const [category, extensions] of Object.entries(fileCategories)) {
       const files = await scanFilesInCategory(category, extensions);
       console.log(files)
-      const { hashes, duplicates } = await processFilesInCategory(category, files);
+      const { hashes, duplicates } = await processFilesInCategory(category, files, extensions);
       console.log('processFilesInCategory done for:' + extensions)
       results[category] = {
         totalFiles: files.length,
@@ -252,7 +255,6 @@ export default function InitialScan() {
     return results;
   };
   const updateProgress = (category, totalFilesCount, duplicates, duplicateFiles) => {
-    // console.log(`Scanned ${totalFiles} ${category} files. Found ${duplicates} duplicates.`)
     categoriesFinished.push(category);
     console.log("Categories Finished Length: " + categoriesFinished.length)
     setCategories((prev) => ({

@@ -29,34 +29,16 @@ export default function ResultsScreen() {
           for (let i = 0; i < result.rows.length; i++) {
             duplicates.push(result.rows.item(i)); // Correct way to extract each row
           }
-          console.log(duplicates)
+          console.log(duplicates.length)
           callback(duplicates);
         },
         (error) => console.error('Error fetching duplicate files:', error)
       );
     });
   };
-  const getInitialScanResults = (callback) => {
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT * FROM Initial_Scan_Results`,
-        [],
-        (_, result) => {
-          let results = [];
-          for (let i = 0; i < result.rows.length; i++) {
-            results.push(result.rows.item(i)); // Correct way to extract each row
-          }
-          console.log(results)
-          callback(results);
-        },
-        (_, error) => console.error("Error fetching scan results:", error)
-      );
-    });
-  };
   
   useEffect(() => {
     getDuplicateFiles(setDuplicates);
-    getInitialScanResults(data => console.log("Scan Results:", data));
   }, []);
 
   // Function to render image or video preview
@@ -77,7 +59,7 @@ export default function ResultsScreen() {
         />
       );
     } else {
-      return <Text style={{ width: 60, height: 60, borderRadius: 5 }}>{fileExtension} file</Text>;
+      return <Text style={{ width: 60, height: 60, borderRadius: 5 }}>{fileExtension}</Text>;
     }
   };
 

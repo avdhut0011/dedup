@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import {
   Button,
   SafeAreaView,
@@ -13,10 +13,10 @@ import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
 import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import SQLite from 'react-native-sqlite-storage';
-import notifee, {AndroidImportance, EventType} from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 
-const {DirectoryMonitor} = NativeModules;
-const db = SQLite.openDatabase({name: 'filehashes.db', location: 'default'});
+const { DirectoryMonitor } = NativeModules;
+const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
 
 export default function MainLogic() {
   const [filePath, setFilePath] = React.useState('');
@@ -71,6 +71,21 @@ export default function MainLogic() {
         (_, error) =>
           console.error('Error creating Initial_Scan_Results table:', error),
       );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS deleted_duplicates (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  file_name TEXT NOT NULL,
+                  file_path TEXT NOT NULL,
+                  file_size_kb INTEGER NOT NULL,
+                  file_category TEXT,
+                  similarity_percentage INTEGER,
+                  deletion_date DATETIME DEFAULT CURRENT_TIMESTAMP
+              );`,
+        [],
+        () => console.log('✅ Deleted_duplicates table created'),
+        (_, error) =>
+          console.error('Error creating deleted_duplicates table:', error),
+      );
       // Create indexes
       tx.executeSql(
         'CREATE INDEX IF NOT EXISTS idx_files_record_file_path ON Files_Record (file_path)',
@@ -109,26 +124,6 @@ export default function MainLogic() {
   const getFileExtension = filePath => {
     return filePath.split('.').pop().toLowerCase();
   };
-  const pickFile = async () => {
-    try {
-      const res = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-      });
-      console.log(res[0]);
-      const fileUri = res[0].uri;
-      setFilePath(fileUri);
-      const fileExtension = getFileExtension(fileUri);
-      console.log('File Extension:', fileExtension);
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        Alert.alert('Cancelled', 'File picking cancelled');
-      } else {
-        Alert.alert('Error', 'Failed to pick file');
-        console.error(err);
-      }
-    }
-  };
-
   const displayNotification = async (title, count) => {
     // Create a channel for Android notifications
     await notifee.createChannel({
@@ -243,7 +238,6 @@ export default function MainLogic() {
       console.error(error);
     }
   };
-
   const fetchHashesFromDatabase = filetype => {
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
@@ -352,6 +346,42 @@ export default function MainLogic() {
       });
     });
   };
+  const deleteFileRecord = filePath => {
+    db.transaction(tx => {
+      // First, get the file ID from Files_Record
+      tx.executeSql(
+        `SELECT id FROM Files_Record WHERE file_path = ?`,
+        [filePath],
+        (_, result) => {
+          if (result.rows.length > 0) {
+            const fileId = result.rows.item(0).id;
+
+            // Delete any entries from Duplicates_Record referencing this file
+            tx.executeSql(
+              `DELETE FROM Duplicates_Record WHERE original_fid = ? OR duplicate_fid = ?`,
+              [fileId, fileId],
+              () =>
+                console.log(`Duplicates involving file ID ${fileId} removed`),
+              error =>
+                console.error('Error deleting from Duplicates_Record:', error),
+            );
+
+            // Delete from Files_Record
+            tx.executeSql(
+              `DELETE FROM Files_Record WHERE id = ?`,
+              [fileId],
+              () => console.log(`File record with ID ${fileId} deleted`),
+              error =>
+                console.error('Error deleting from Files_Record:', error),
+            );
+          } else {
+            console.warn('File record not found in database.');
+          }
+        },
+        error => console.error('Error retrieving file ID:', error),
+      );
+    });
+  };
 
   const fetchKnownFiles = () => {
     return new Promise((resolve, reject) => {
@@ -400,7 +430,6 @@ export default function MainLogic() {
       });
     });
   };
-
   const dropTable = () => {
     db.transaction(tx => {
       tx.executeSql(
@@ -451,67 +480,30 @@ export default function MainLogic() {
       );
     });
   };
-  const deleteFileRecord = filePath => {
-    db.transaction(tx => {
-      // First, get the file ID from Files_Record
-      tx.executeSql(
-        `SELECT id FROM Files_Record WHERE file_path = ?`,
-        [filePath],
-        (_, result) => {
-          if (result.rows.length > 0) {
-            const fileId = result.rows.item(0).id;
-
-            // Delete any entries from Duplicates_Record referencing this file
-            tx.executeSql(
-              `DELETE FROM Duplicates_Record WHERE original_fid = ? OR duplicate_fid = ?`,
-              [fileId, fileId],
-              () =>
-                console.log(`Duplicates involving file ID ${fileId} removed`),
-              error =>
-                console.error('Error deleting from Duplicates_Record:', error),
-            );
-
-            // Delete from Files_Record
-            tx.executeSql(
-              `DELETE FROM Files_Record WHERE id = ?`,
-              [fileId],
-              () => console.log(`File record with ID ${fileId} deleted`),
-              error =>
-                console.error('Error deleting from Files_Record:', error),
-            );
-          } else {
-            console.warn('File record not found in database.');
-          }
-        },
-        error => console.error('Error retrieving file ID:', error),
-      );
-    });
-  };
 
   useEffect(() => {
-    // fetchKnownFiles();
     // dropTable();
-    initializeDatabase();
+    // initializeDatabase();
     // truncateInitDb();
   }, []);
   useEffect(() => {
-    const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-    const subscription = directoryMonitorEvents.addListener(
-      'FileChangeEvent',
-      event => {
-        const [eventType, filePath] = event.split(':');
-        console.log('File change detected:', event);
-        // Process changes
-        if (eventType == 'CREATE') {
-          computeAndCompareHash(filePath);
-        } else if (eventType == 'DELETE') {
-          deleteFileRecord(filePath);
-        } else {
-        }
-      },
-    );
+    // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
+    // const subscription = directoryMonitorEvents.addListener(
+    //   'FileChangeEvent',
+    //   event => {
+    //     const [eventType, filePath] = event.split(':');
+    //     console.log('File change detected:', event);
+    //     // Process changes
+    //     if (eventType == 'CREATE') {
+    //       computeAndCompareHash(filePath);
+    //     } else if (eventType == 'DELETE') {
+    //       deleteFileRecord(filePath);
+    //     } else {
+    //     }
+    //   },
+    // );
 
-    return () => subscription.remove();
+    // return () => subscription.remove();
   }, []);
 
   return (

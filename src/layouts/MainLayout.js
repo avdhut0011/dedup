@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginTop: 50, // Adjust this value based on the height of your Navbar
+    marginTop: 10, // Adjust this value based on the height of your Navbar
   },
 });
