@@ -16,7 +16,7 @@ import com.nativeapp.modules.DirectoryMonitorModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.uimanager.ViewManager
-import com.nativeapp.FileScannerModule;
+import com.nativeapp.FileScannerModule
 
 class CustomReactPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
