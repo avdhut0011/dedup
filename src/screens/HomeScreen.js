@@ -5,6 +5,7 @@ import { PieChart } from 'react-native-chart-kit';
 const { FileScannerModule } = NativeModules;
 export default function HomeScreen() {
   const [fileDistribution, setFileDistribution] = useState([]);
+  const [cpuUsage, setCpuUsage] = useState(0);
 
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -14,7 +15,7 @@ export default function HomeScreen() {
     }
     return color;
   };
-  
+
   const scanFiles = async () => {
     try {
       const files = await FileScannerModule.scanFiles();
@@ -42,40 +43,41 @@ export default function HomeScreen() {
       console.error("File scan error:", error);
     }
   };
-    useEffect(() => {
-      scanFiles();
-    }, []);
+
+  useEffect(() => {
+    scanFiles();
+  }, []);
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.scanButton}>
         <Text style={styles.scanButtonText}>SCAN FILES</Text>
       </TouchableOpacity>
       <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 20 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 20 }}>
-        File Distribution
-      </Text>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 20 }}>
+          File Distribution
+        </Text>
 
-      {fileDistribution.length > 0 ? (
-        <PieChart
-          data={fileDistribution}
-          width={Dimensions.get('window').width - 40}
-          height={220}
-          chartConfig={{
-            backgroundColor: '#1e2240',
-            backgroundGradientFrom: '#1e2240',
-            backgroundGradientTo: '#1e2240',
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            strokeWidth: 2,
-          }}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute // Shows values inside the chart
-        />
-      ) : (
-        <Text style={{ color: 'white' }}>No files found for distribution.</Text>
-      )}
-    </ScrollView>
+        {fileDistribution.length > 0 ? (
+          <PieChart
+            data={fileDistribution}
+            width={Dimensions.get('window').width - 40}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#1e2240',
+              backgroundGradientFrom: '#1e2240',
+              backgroundGradientTo: '#1e2240',
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              strokeWidth: 2,
+            }}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute // Shows values inside the chart
+          />
+        ) : (
+          <Text style={{ color: 'white' }}>No files found for distribution.</Text>
+        )}
+      </ScrollView>
     </View>
   );
 }
