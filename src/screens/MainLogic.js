@@ -14,6 +14,7 @@ import RNFS from 'react-native-fs';
 import DocumentPicker from 'react-native-document-picker';
 import SQLite from 'react-native-sqlite-storage';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { DirectoryMonitor } = NativeModules;
 const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
@@ -32,7 +33,7 @@ export default function MainLogic() {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               file_name TEXT NOT NULL,
               file_type TEXT NOT NULL,
-              file_path TEXT NOT NULL,
+              file_path TEXT NOT NULL UNIQUE,
               file_size INTEGER NOT NULL,
               file_hash TEXT NOT NULL,
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -393,7 +394,7 @@ export default function MainLogic() {
             const knownFiles = {};
             for (let i = 0; i < results.rows.length; i++) {
               const row = results.rows.item(i);
-              knownFiles[row.file_path] = row.file_hash; // Populate knownFiles with file paths and hash
+              knownFiles[row.id] = row.file_path; // Populate knownFiles with file paths and hash
             }
             console.log(knownFiles);
             resolve(knownFiles);
@@ -416,8 +417,8 @@ export default function MainLogic() {
             const knownFiles = {};
             for (let i = 0; i < results.rows.length; i++) {
               const row = results.rows.item(i);
-              knownFiles[row.original_fid] =
-                row.duplicate_fid + ' :@: ' + row.similarity_score; // Populate knownFiles with file paths and hash
+              knownFiles[i+1] =
+              row.original_fid + '=>' + row.duplicate_fid + ' :@: ' + row.similarity_score; // Populate knownFiles with file paths and hash
             }
             console.log(knownFiles);
             resolve(knownFiles);
@@ -438,6 +439,13 @@ export default function MainLogic() {
         () => console.log(`Table "Duplicates_Record" has been dropped.`),
         error =>
           console.error(`Error dropping table "Duplicates_Record":`, error),
+      );
+      tx.executeSql(
+        `DROP TABLE IF EXISTS Files_Record`,
+        [],
+        () => console.log(`Table "Files_Record" has been dropped.`),
+        error =>
+          console.error(`Error dropping table "Files_Record":`, error),
       );
     });
   };
@@ -485,25 +493,8 @@ export default function MainLogic() {
     // dropTable();
     // initializeDatabase();
     // truncateInitDb();
-  }, []);
-  useEffect(() => {
-    // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-    // const subscription = directoryMonitorEvents.addListener(
-    //   'FileChangeEvent',
-    //   event => {
-    //     const [eventType, filePath] = event.split(':');
-    //     console.log('File change detected:', event);
-    //     // Process changes
-    //     if (eventType == 'CREATE') {
-    //       computeAndCompareHash(filePath);
-    //     } else if (eventType == 'DELETE') {
-    //       deleteFileRecord(filePath);
-    //     } else {
-    //     }
-    //   },
-    // );
-
-    // return () => subscription.remove();
+    // AsyncStorage.removeItem('isFirstLaunch');
+    // console.log('item removed')
   }, []);
 
   return (

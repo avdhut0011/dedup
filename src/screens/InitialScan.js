@@ -77,7 +77,7 @@ export default function InitialScan() {
   };
   const scanFilesInCategory = async (category, extensions) => {
     const files = [];
-    const directories = [`${RNFS.ExternalStorageDirectoryPath}/duplicates`]; // Start from root directory
+    const directories = [`${RNFS.ExternalStorageDirectoryPath}/Documents`]; // Start from root directory
     // Define ignored directories
     const ignoredPrefixes = [
       'com.',        // App-specific directories
@@ -280,12 +280,6 @@ export default function InitialScan() {
     const progressValue = categoriesFinished.length / 7;
     setProgress(progressValue);
   };
-  const getFilesDistribution = async () => {
-    for (const [category, extensions] of Object.entries(fileCategories)) {
-      const files = await scanFilesInCategory(category, extensions);
-      console.log(category + ' : ' + files.length)
-    }
-  }
   const insertInitialScanResults = (scanData) => {
     db.transaction(tx => {
       Object.keys(scanData).forEach(fileType => {
