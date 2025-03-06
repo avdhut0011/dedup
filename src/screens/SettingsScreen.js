@@ -49,13 +49,6 @@ const SettingsScreen = () => {
       }
     };
     fetchDirectories();
-
-    // const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-    // const subscription = directoryMonitorEvents.addListener('FileChangeEvent', (event) => {
-    //   console.log('File Change Detected:', event);
-    // });
-
-    // return () => subscription.remove();
   }, []);
   // Detect App Termination (Clear Data When Fully Closed)
   useEffect(() => {
@@ -103,7 +96,7 @@ const SettingsScreen = () => {
     await AsyncStorage.setItem('monitoredDirectories', JSON.stringify(updatedMonitoredDirs));
   };
 
-  const getFileExtension = filePath => {
+  const getFileExtension = (filePath) => {
     return filePath.split('.').pop().toLowerCase();
   };
   const displayNotification = async (title, count) => {
@@ -146,16 +139,16 @@ const SettingsScreen = () => {
       },
     });
   };
-  const computeAndCompareHash = async filePath => {
+  const computeAndCompareHash = async (newFilePath) => {
     try {
       // Get file metadata (size, name)
-      const fileInfo = await RNFS.stat(filePath);
+      const fileInfo = await RNFS.stat(newFilePath);
       const fileSizeKB = (fileInfo.size / 1024).toFixed(2); // Convert to KB
-      const fileName = filePath.split('/').pop(); // Extract file name
-      const filetype = await getFileExtension(filePath);
+      const fileName = newFilePath.split('/').pop(); // Extract file name
+      const filetype = await getFileExtension(newFilePath);
 
       // Compute the hash of the new file
-      const hash = SSDeepTurboModule.hashFile(filePath);
+      const hash = await SSDeepTurboModule.hashFile(newFilePath);
       console.log(hash)
 
       // Fetch all relevant hashes from the database
@@ -164,7 +157,7 @@ const SettingsScreen = () => {
 
       // Compare the new hash with the array of hashes
       const threshold = 55; // Set your threshold here
-      const results = SSDeepTurboModule.compareHashWithArray(
+      const results = await SSDeepTurboModule.compareHashWithArray(
         hash,
         hashes,
         threshold,
@@ -189,24 +182,27 @@ const SettingsScreen = () => {
           const originalFileId = await fetchFileIdByHash(originalFileHash);
           // Insert the duplicate file into Files_Record
           const duplicateFileId = await insertHashIntoDatabase(
-            filePath,
+            newFilePath,
             hash,
             filetype,
             fileName,
             fileSizeKB,
           );
+          console.log(duplicateFileId)
           // Insert the duplicate relationship into Duplicates_Record
           await insertHashIntoDuplicates(
             originalFileId,
             duplicateFileId,
             similarityScore,
           );
+          console.log('Inserted into duplicates table')
         }
       } else {
         Alert.alert('No Duplicates', 'No similar files found.');
+        console.log('No duplicates found')
         // Insert the new file's hash into the database
         await insertHashIntoDatabase(
-          filePath,
+          newFilePath,
           hash,
           filetype,
           fileName,
@@ -218,11 +214,11 @@ const SettingsScreen = () => {
       console.error(error);
     }
   };
-  const fetchHashesFromDatabase = filetype => {
+  const fetchHashesFromDatabase = (filetype) => {
     return new Promise((resolve, reject) => {
-      db.transaction(tx => {
+      db.transaction((tx) => {
         tx.executeSql(
-          'SELECT file_hash FROM Files_Record WHERE file_type = ?',
+          'SELECT DISTINCT file_hash FROM Files_Record WHERE file_type = ?',
           [filetype],
           (tx, results) => {
             const hashes = [];
@@ -231,9 +227,9 @@ const SettingsScreen = () => {
             }
             resolve(hashes);
           },
-          error => {
+          (error) => {
             reject(error);
-          },
+          }
         );
       });
     });
@@ -244,7 +240,7 @@ const SettingsScreen = () => {
         return new Promise((resolve, reject) => {
           db.transaction(tx => {
             tx.executeSql(
-              'SELECT file_path FROM Files_Record WHERE file_hash = ?',
+              'SELECT DISTINCT file_path FROM Files_Record WHERE file_hash = ?',
               [result.hash],
               (tx, queryResults) => {
                 const similarFilePaths = [];
@@ -272,9 +268,9 @@ const SettingsScreen = () => {
       return [];
     }
   };
-  const fetchFileIdByHash = hash => {
+  const fetchFileIdByHash = (hash) => {
     return new Promise((resolve, reject) => {
-      db.transaction(tx => {
+      db.transaction((tx) => {
         tx.executeSql(
           'SELECT id FROM Files_Record WHERE file_hash = ?',
           [hash],
@@ -326,8 +322,8 @@ const SettingsScreen = () => {
       });
     });
   };
-  const deleteFileRecord = filePath => {
-    db.transaction(tx => {
+  const deleteFileRecord = (filePath) => {
+    db.transaction((tx) => {
       // First, get the file ID from Files_Record
       tx.executeSql(
         `SELECT id FROM Files_Record WHERE file_path = ?`,
@@ -364,28 +360,28 @@ const SettingsScreen = () => {
   };
   useEffect(() => {
     const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
-    const subscription = directoryMonitorEvents.addListener(
-      'FileChangeEvent',
-      event => {
-        const [eventType, filePath] = event.split(':');
-        console.log('File change detected:', event);
-        // Process changes
-        if (eventType == 'CREATE') {
-          console.log('computeAndComparing new file hash')
-          computeAndCompareHash(filePath);
-        } else if (eventType == 'MOVED_TO') {
-          console.log('computeAndComparing new file hash')
-          computeAndCompareHash(filePath);
-        } else if (eventType == 'DELETE') {
-          deleteFileRecord(filePath);
-        } else {
-        }
-      },
-    );
-
-    return () => subscription.remove();
+    const handleFileChange = async (event) => {
+      const [eventType, filePath] = event.split(':');
+      console.log('File change detected:', event);
+      if (eventType === 'CREATE' || eventType === 'MOVED_TO') {
+        console.log('computeAndComparing new file hash');
+        // const filetype = await getFileExtension(filePath);
+        // const hashes = await fetchHashesFromDatabase(filetype);
+        // console.log(hashes)
+        computeAndCompareHash(filePath);
+      } else if (eventType === 'DELETE') {
+        deleteFileRecord(filePath);
+      }
+    };
+    // Remove previous listeners to prevent duplicate executions
+    directoryMonitorEvents.removeAllListeners('FileChangeEvent');
+    // Add the listener
+    const subscription = directoryMonitorEvents.addListener('FileChangeEvent', handleFileChange);
+    return () => {
+      subscription.remove(); // Cleanup when component unmounts
+    };
   }, []);
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>SETTINGS</Text>
