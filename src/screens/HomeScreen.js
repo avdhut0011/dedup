@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, NativeModules } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import CpuUsage from '../components/CpuUsage';
+import StorageStats from '../components/StorageStats';
 
 const { FileScannerModule } = NativeModules;
 export default function HomeScreen() {
   const [fileDistribution, setFileDistribution] = useState([]);
-  const [cpuUsage, setCpuUsage] = useState(0);
 
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -49,10 +50,9 @@ export default function HomeScreen() {
   }, []);
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.scanButton}>
-        <Text style={styles.scanButtonText}>SCAN FILES</Text>
-      </TouchableOpacity>
-      <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 20 }}>
+      <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 10 }}>
+        <CpuUsage />
+        <StorageStats />
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 20 }}>
           File Distribution
         </Text>

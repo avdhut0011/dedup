@@ -13,6 +13,8 @@ import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 
 import com.nativeapp.modules.DirectoryMonitorModule
+import com.nativeapp.modules.CpuModule
+import com.nativeapp.modules.StorageModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.uimanager.ViewManager
@@ -20,7 +22,7 @@ import com.nativeapp.FileScannerModule
 
 class CustomReactPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(DirectoryMonitorModule(reactContext), FileScannerModule(reactContext))
+        return listOf(DirectoryMonitorModule(reactContext), FileScannerModule(reactContext), CpuModule(reactContext), StorageModule(reactContext))
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
