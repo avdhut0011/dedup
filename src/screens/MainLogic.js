@@ -492,9 +492,9 @@ export default function MainLogic() {
   useEffect(() => {
     // dropTable();
     // initializeDatabase();
-    // truncateInitDb();
-    // AsyncStorage.removeItem('isFirstLaunch');
-    // console.log('item removed')
+    truncateInitDb();
+    AsyncStorage.removeItem('isFirstLaunch');
+    console.log('item removed')
   }, []);
 
   return (
@@ -532,6 +532,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'white'
   },
   title: {
     fontSize: 18,

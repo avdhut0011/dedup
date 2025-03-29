@@ -15,18 +15,18 @@ export default function Navbar({ toggleSidebar }) {
 const styles = StyleSheet.create({
   navbar: {
     height: 50,
-    backgroundColor: '#0a0e2a',
+    backgroundColor: 'white',    
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
     paddingHorizontal: 10,
   },
   menuButton: {
-    color: '#fff',
+    color: 'black',
     fontSize: 24,
   },
   title: {
-    color: '#fff',
+    color: 'black',
     fontSize: 20,
     fontWeight: 'bold',
   },

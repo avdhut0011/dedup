@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, NativeEventEmitter, NativeModules, StyleSheet, FlatList, AppState, Alert } from 'react-native';
+import { View, Text, Button, NativeEventEmitter, NativeModules, StyleSheet, FlatList, AppState, Alert,TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
@@ -383,86 +383,161 @@ const SettingsScreen = () => {
   }, []);
 
   return (
+    // <View style={styles.container}>
+    //   <Text style={styles.heading}>SETTINGS</Text>
+    //   <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
+
+    //   <Picker
+    //     selectedValue={selectedDirectory}
+    //     style={styles.picker}
+    //     onValueChange={handleDirectoryChange}
+    //   >
+    //     {Object.entries(availableDirectories).map(([key, value]) => (
+    //       <Picker.Item key={key} label={key} value={value} />
+    //     ))}
+    //   </Picker>
+
+    //   <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />
+
+    //   <Text style={styles.subtitle}>Monitored Directories:</Text>
+    //   <FlatList
+    //     data={monitoredDirectories}
+    //     keyExtractor={(item) => item}
+    //     renderItem={({ item }) => (
+    //       <View style={styles.monitoredDirectory}>
+    //         <Text>{item}</Text>
+    //         <Button title="Stop" onPress={() => stopMonitoring(item)} />
+    //       </View>
+    //     )}
+    //     ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
+    //   />
+    // </View>
+
     <View style={styles.container}>
-      <Text style={styles.heading}>SETTINGS</Text>
-      <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
+            <Text style={styles.heading}>SETTINGS</Text>
+            <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
 
-      <Picker
-        selectedValue={selectedDirectory}
-        style={styles.picker}
-        onValueChange={handleDirectoryChange}
-      >
-        {Object.entries(availableDirectories).map(([key, value]) => (
-          <Picker.Item key={key} label={key} value={value} />
-        ))}
-      </Picker>
+            <View style={styles.card}>
+                <Picker
+                    selectedValue={selectedDirectory}
+                    style={styles.picker}
+                    onValueChange={(itemValue) => setSelectedDirectory(itemValue)}
+                >
+                    {Object.entries(availableDirectories).map(([key, value]) => (
+                        <Picker.Item key={key} label={key} value={value} />
+                    ))}
+                </Picker>
 
-      <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />
+                <TouchableOpacity style={styles.startButton} onPress={startMonitoring}>
+                    <Text style={styles.startButtonText}>Start Monitoring</Text>
+                </TouchableOpacity>
+            </View>
 
-      <Text style={styles.subtitle}>Monitored Directories:</Text>
-      <FlatList
-        data={monitoredDirectories}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <View style={styles.monitoredDirectory}>
-            <Text>{item}</Text>
-            <Button title="Stop" onPress={() => stopMonitoring(item)} />
-          </View>
-        )}
-        ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
-      />
-    </View>
+            <Text style={styles.subtitle}>Monitored Directories</Text>
+
+            <FlatList
+                data={monitoredDirectories}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                    <View style={styles.directoryCard}>
+                        <Text style={styles.directoryText}>{item}</Text>
+                        <TouchableOpacity style={styles.stopButton} onPress={() => stopMonitoring(item)}>
+                            <Text style={styles.stopButtonText}>Stop</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
+            />
+        </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#0a0e2a',
-    padding: 20,
-    justifyContent: 'center',
+      flex: 1,
+      padding: 15,
+      backgroundColor: "#f5f5f5", // Light gray background like CCleaner UI
   },
   heading: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 20,
+      fontSize: 22,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: "#333",
+      textAlign: "center",
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 15,
+      color: "#444",
+  },
+  card: {
+      backgroundColor: "#ffffff", // White card background
+      borderRadius: 12,
+      padding: 15,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3, // Android shadow
   },
   picker: {
-    height: 50,
-    backgroundColor: '#1e2240',
-    color: 'white',
-    borderRadius: 10,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+      height: 50,
+      width: "100%",
+  },
+  startButton: {
+      backgroundColor: "#007BFF", // Blue button like CCleaner
+      paddingVertical: 12,
+      marginTop: 10,
+      borderRadius: 8,
+      alignItems: "center",
+  },
+  startButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "bold",
   },
   subtitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginTop: 20,
-    marginBottom: 10,
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#555",
+      marginBottom: 10,
   },
-  monitoredDirectory: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1e2240',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
+  directoryCard: {
+      backgroundColor: "#ffffff",
+      borderRadius: 12,
+      padding: 15,
+      marginBottom: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+  },
+  directoryText: {
+      fontSize: 14,
+      color: "#333",
+      flex: 1,
+  },
+  stopButton: {
+      backgroundColor: "#D9534F", // CCleaner-style red button
+      paddingVertical: 8,
+      paddingHorizontal: 15,
+      borderRadius: 8,
+  },
+  stopButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+      fontSize: 14,
   },
   noDirectoryText: {
-    fontSize: 16,
-    color: '#aaa',
-    textAlign: 'center',
-    marginTop: 20,
+      color: "#888",
+      textAlign: "center",
+      marginTop: 10,
   },
 });
 

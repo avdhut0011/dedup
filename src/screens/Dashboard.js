@@ -93,22 +93,28 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.heading}>DASHBOARD STATS</Text>
-      
-      <Text style={styles.chartTitle}>Total Files (Bar Chart)</Text>
-      <BarChart data={barData} width={screenWidth - 40} height={220} chartConfig={chartConfig} />
 
-      <Text style={styles.chartTitle}>Duplicate Files (Line Chart)</Text>
-      <LineChart data={lineData} width={screenWidth - 40} height={220} chartConfig={chartConfig} />
+      <View style={styles.card}>
+        <Text style={styles.chartTitle}>Total Files (Bar Chart)</Text>
+        <BarChart data={barData} width={screenWidth * 0.81} height={220} chartConfig={chartConfig} />
+      </View>
 
-      <Text style={styles.chartTitle}>Duplicate File Distribution (Pie Chart)</Text>
-      <PieChart data={pieData} width={screenWidth - 40} height={220} accessor="population" chartConfig={chartConfig} />
+      <View style={styles.card}>
+        <Text style={styles.chartTitle}>Duplicate Files (Line Chart)</Text>
+        <LineChart data={lineData} width={screenWidth * 0.81} height={220} chartConfig={chartConfig} />
+      </View>
 
-      <Text style={styles.chartTitle}>Duplicate Files Percentage (Progress Chart)</Text>
-      <ProgressChart data={progressData} width={screenWidth - 40} height={220} strokeWidth={16} radius={32} chartConfig={chartConfig} />
-      
-      <Text style={styles.chartTitle}>Heatmap Chart (Placeholder Data)</Text>
-      <ContributionGraph values={heatmapData} endDate={new Date("2024-02-07")} numDays={7} width={screenWidth - 40} height={220} chartConfig={chartConfig} />
+      <View style={styles.card}>
+        <Text style={styles.chartTitle}>Duplicate File Distribution (Pie Chart)</Text>
+        <PieChart data={pieData} width={screenWidth * 0.81} height={220} accessor="population" chartConfig={chartConfig} />
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.chartTitle}>Duplicate Files Percentage (Progress Chart)</Text>
+        <ProgressChart data={progressData} width={screenWidth * 0.81} height={220} strokeWidth={16} radius={32} chartConfig={chartConfig} />
+      </View>
     </ScrollView>
+  
   );
 }
 
@@ -116,22 +122,34 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0e2a",
+    backgroundColor: "#f8f9fa", // Light grey background (CCleaner-style)
     padding: 20,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "white",
+    color: "#333", // Dark grey
     textAlign: "center",
-    marginTop: 20,
     marginBottom: 20,
+    textTransform: "uppercase", // Capitalized like CCleaner
+  },
+  card: {
+    backgroundColor: "#ffffff", // White background
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    width: "100%", // Ensure it takes full width
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4, // Slight elevation for material effect
   },
   chartTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "white",
+    color: "#444", // Softer black
     marginBottom: 10,
-    marginTop: 20,
   },
 });
