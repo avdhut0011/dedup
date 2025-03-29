@@ -192,7 +192,7 @@ export default function InitialScan() {
   const getFileExtension = filePath => {
     return filePath.split('.').pop().toLowerCase();
   };
-  const processFilesInCategory = async (filetype, files) => {
+  const processFilesInCategory = async (filetype, files, extensions) => {
     console.log('In processFilesInCategory: ' + filetype);
     const hashes = [];
     const duplicates = [];
@@ -250,6 +250,7 @@ export default function InitialScan() {
       };
       console.log(results)
       // Update UI with progress
+      
       await updateProgress(category, files.length, duplicates.length, duplicates);
     }
     return results;
