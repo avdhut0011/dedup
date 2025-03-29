@@ -15,6 +15,12 @@ import com.facebook.react.bridge.Promise;
 import org.json.JSONObject;
 import java.io.File;
 
+import android.content.Intent;
+import android.provider.Settings;
+import android.app.AppOpsManager;
+import android.os.Build;
+import android.content.pm.PackageManager;
+
 public class StorageModule extends ReactContextBaseJavaModule {
 
     public StorageModule(ReactApplicationContext reactContext) {
@@ -29,6 +35,14 @@ public class StorageModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getStorageStats(Promise promise) {
         try {
+            // Check if Usage Access permission is granted
+            if (!isUsageAccessGranted()) {
+                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                getCurrentActivity().startActivity(intent);
+                promise.reject("PERMISSION_DENIED", "Usage Access permission is required.");
+                return;
+            }
+
             JSONObject storageData = new JSONObject();
 
             // Get internal storage stats
@@ -55,9 +69,21 @@ public class StorageModule extends ReactContextBaseJavaModule {
         }
     }
 
+    private boolean isUsageAccessGranted() {
+        try {
+            Context context = getReactApplicationContext();
+            AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), context.getPackageName());
+            return mode == AppOpsManager.MODE_ALLOWED;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private long getMediaSize(Uri uri) {
         Cursor cursor = getReactApplicationContext().getContentResolver().query(
-                uri, new String[]{MediaStore.MediaColumns.SIZE}, null, null, null);
+                uri, new String[] { MediaStore.MediaColumns.SIZE }, null, null, null);
         long totalSize = 0;
         if (cursor != null) {
             while (cursor.moveToNext()) {
@@ -70,7 +96,8 @@ public class StorageModule extends ReactContextBaseJavaModule {
 
     private long getDocumentsSize() {
         Uri uri = MediaStore.Files.getContentUri("external");
-        String selection = MediaStore.Files.FileColumns.MIME_TYPE + " IN ('application/pdf', 'application/msword', 'application/vnd.ms-excel')";
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE
+                + " IN ('application/pdf', 'application/msword', 'application/vnd.ms-excel')";
         return getMediaSize(uri, selection);
     }
 
@@ -82,7 +109,7 @@ public class StorageModule extends ReactContextBaseJavaModule {
 
     private long getMediaSize(Uri uri, String selection) {
         Cursor cursor = getReactApplicationContext().getContentResolver().query(
-                uri, new String[]{MediaStore.MediaColumns.SIZE}, selection, null, null);
+                uri, new String[] { MediaStore.MediaColumns.SIZE }, selection, null, null);
         long totalSize = 0;
         if (cursor != null) {
             while (cursor.moveToNext()) {
