@@ -31,7 +31,7 @@ export default function HomeScreen() {
       const files = await FileScannerModule.scanFiles();
       const parsedFiles = JSON.parse(files);
       console.log(parsedFiles);
-      
+
       const categoryCounts = {};
       parsedFiles.forEach((file) => {
         categoryCounts[file.category] = (categoryCounts[file.category] || 0) + 1;
@@ -59,108 +59,112 @@ export default function HomeScreen() {
 
   // Function to calculate the percentage of each category
   const calculatePercentage = (value) => value / totalStorage;
-  
+
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        {/* Storage Usage Heading */}
-        <Text style={styles.cardHeading}>Storage Overview</Text>
+    <ScrollView contentContainerStyle={{ alignItems: 'center', padding: 10 }}>
+      <View style={styles.container}>
+        <View style={styles.card}>
+          {/* Storage Usage Heading */}
+          <Text style={styles.cardHeading}>Storage Overview</Text>
 
-        {/* Free Space Text */}
-        <Text style={styles.storageText}>{usedStorage} GB Used</Text>
-        <Text style={styles.freeUpText}>
-          Free up to <Text style={{ fontWeight: 'bold' }}>12 GB</Text>
-        </Text>
+          {/* Free Space Text */}
+          <Text style={styles.storageText}>{usedStorage} GB Used</Text>
+          <Text style={styles.freeUpText}>
+            Free up to <Text style={{ fontWeight: 'bold' }}>12 GB</Text>
+          </Text>
 
-        {/* Progress Bars */}
-        <View style={styles.progressBarContainer}>
-          <Progress.Bar
-            progress={calculatePercentage(usedStorage)}
-            width={Dimensions.get("window").width - 60}
-            height={12}
-            color="#4CAF50" // Green for used storage
-            borderRadius={8}
-            borderWidth={1}
-            borderColor="#ddd"
-            unfilledColor="#e0e0e0"
-          />
-          <Progress.Bar
-            progress={calculatePercentage(hiddenCache)}
-            width={Dimensions.get("window").width - 60}
-            height={12}
-            color="#FFA500" // Orange for hidden cache
-            borderRadius={8}
-            borderWidth={1}
-            borderColor="transparent"
-            unfilledColor="transparent"
-            style={styles.overlayBar}
-          />
-          <Progress.Bar
-            progress={calculatePercentage(filesToReview)}
-            width={Dimensions.get("window").width - 60}
-            height={12}
-            color="#008000" // Dark Green for files to review
-            borderRadius={8}
-            borderWidth={1}
-            borderColor="transparent"
-            unfilledColor="transparent"
-            style={styles.overlayBar}
-          />
+          {/* Progress Bars */}
+          <View style={styles.progressBarContainer}>
+            <Progress.Bar
+              progress={calculatePercentage(usedStorage)}
+              width={Dimensions.get("window").width - 60}
+              height={12}
+              color="#4CAF50" // Green for used storage
+              borderRadius={8}
+              borderWidth={1}
+              borderColor="#ddd"
+              unfilledColor="#e0e0e0"
+            />
+            <Progress.Bar
+              progress={calculatePercentage(hiddenCache)}
+              width={Dimensions.get("window").width - 60}
+              height={12}
+              color="#FFA500" // Orange for hidden cache
+              borderRadius={8}
+              borderWidth={1}
+              borderColor="transparent"
+              unfilledColor="transparent"
+              style={styles.overlayBar}
+            />
+            <Progress.Bar
+              progress={calculatePercentage(filesToReview)}
+              width={Dimensions.get("window").width - 60}
+              height={12}
+              color="#008000" // Dark Green for files to review
+              borderRadius={8}
+              borderWidth={1}
+              borderColor="transparent"
+              unfilledColor="transparent"
+              style={styles.overlayBar}
+            />
+          </View>
+
+          {/* Legend */}
+          <View style={styles.legendContainer}>
+            <View style={styles.legendItem}>
+              <View style={[styles.colorBox, { backgroundColor: "#0000FF" }]} />
+              <Text style={styles.legendText}>Unneeded files - {unneededFiles} MB</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.colorBox, { backgroundColor: "#FFA500" }]} />
+              <Text style={styles.legendText}>Hidden caches - {hiddenCache} GB</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.colorBox, { backgroundColor: "#008000" }]} />
+              <Text style={styles.legendText}>Files to review - {filesToReview} GB</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Legend */}
-        <View style={styles.legendContainer}>
-          <View style={styles.legendItem}>
-            <View style={[styles.colorBox, { backgroundColor: "#0000FF" }]} />
-            <Text style={styles.legendText}>Unneeded files - {unneededFiles} MB</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.colorBox, { backgroundColor: "#FFA500" }]} />
-            <Text style={styles.legendText}>Hidden caches - {hiddenCache} GB</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.colorBox, { backgroundColor: "#008000" }]} />
-            <Text style={styles.legendText}>Files to review - {filesToReview} GB</Text>
-          </View>
+
+        <View style={styles.card}>
+          {/* Scan Button */}
+          <TouchableOpacity style={styles.scanButton}>
+            <Text style={styles.scanButtonText}>SCAN FILES</Text>
+          </TouchableOpacity>
+        </View>
+
+        <CpuUsage />
+        <StorageStats />
+
+        <View style={styles.card}>
+          <Text style={styles.heading}>File Distribution</Text>
+
+          {fileDistribution.length > 0 ? (
+            <PieChart
+              data={fileDistribution}
+              width={Dimensions.get('window').width - 60} // Slightly reduced width for padding
+              height={220}
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                color: (opacity = 1) => `rgba(50, 50, 50, ${opacity})`, // Dark grey text
+                strokeWidth: 2,
+              }}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              absolute // Shows values inside the chart
+            />
+          ) : (
+            <Text style={styles.noFilesText}>No files found for distribution.</Text>
+          )}
+
         </View>
       </View>
-
-
-      <View style={styles.card}>
-        {/* Scan Button */}
-        <TouchableOpacity style={styles.scanButton}>
-          <Text style={styles.scanButtonText}>SCAN FILES</Text>
-        </TouchableOpacity>
-      </View>
-
-
-      <View style={styles.card}>
-        <Text style={styles.heading}>File Distribution</Text>
-
-        {fileDistribution.length > 0 ? (
-          <PieChart
-            data={fileDistribution}
-            width={Dimensions.get('window').width - 60} // Slightly reduced width for padding
-            height={220}
-            chartConfig={{
-              backgroundColor: '#ffffff',
-              backgroundGradientFrom: '#ffffff',
-              backgroundGradientTo: '#ffffff',
-              color: (opacity = 1) => `rgba(50, 50, 50, ${opacity})`, // Dark grey text
-              strokeWidth: 2,
-            }}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute // Shows values inside the chart
-          />
-        ) : (
-          <Text style={styles.noFilesText}>No files found for distribution.</Text>
-        )}
-        
-      </View>
-    </View>  
+    </ScrollView>
   );
 }
 
