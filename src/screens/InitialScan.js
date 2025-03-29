@@ -197,7 +197,7 @@ export default function InitialScan() {
     const hashes = [];
     const duplicates = [];
     for (const file of files) {
-      try {
+      try { 
         // Get file metadata (size, name)
         const fileInfo = await RNFS.stat(file);
         const fileSizeKB = (fileInfo.size / 1024).toFixed(2); // Convert to KB

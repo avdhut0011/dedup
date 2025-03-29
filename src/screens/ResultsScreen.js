@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity ,StyleSheet } from 'react-native';
 import Video from 'react-native-video';
 import SQLite from 'react-native-sqlite-storage';
 
@@ -36,6 +36,7 @@ export default function ResultsScreen() {
       );
     });
   };
+ 
   
   useEffect(() => {
     getDuplicateFiles(setDuplicates);
@@ -63,36 +64,79 @@ export default function ResultsScreen() {
     }
   };
 
+  console.log("result")
+
   return (
-    <View style={{ flex: 1, padding: 10 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Duplicate Files</Text>
+    // <View style={{ flex: 1, padding: 10 }}>
+    //   <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Duplicate Files</Text>
+    //   <FlatList
+    //     data={duplicates}
+    //     keyExtractor={(item) => item.id.toString()}
+    //     renderItem={({ item, index }) => (
+    //       <View style={{marginBottom: 10 }}>
+    //         <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Set: {index + 1}</Text>
+    //         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+    //           {renderFilePreview(item.duplicate_path)}
+    //           <View style={{ flex: 1, marginLeft: 10 }}>
+    //             <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Duplicate File: {item.duplicate_name}</Text>
+    //             <Text style={{ color: 'gray', fontSize: 12 }}>Duplicate File Size: {(item.duplicate_size / 1024).toFixed(2)} MB</Text>
+    //             <Text style={{ fontSize: 12, color: 'gray' }}>Similarity: {item.similarity_score}%</Text>
+    //             <Text style={{ fontSize: 12, color: 'gray' }}>{item.duplicate_path}</Text>
+    //           </View>
+    //           <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
+    //             <Text style={{ color: 'white' }}>Delete</Text>
+    //           </TouchableOpacity>
+    //         </View>
+    //         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+    //           {renderFilePreview(item.original_path)}
+    //           <View style={{ flex: 1, marginLeft: 10 }}>
+    //             <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Original File : {item.original_name}</Text>
+    //             <Text style={{ color: 'gray', fontSize: 12 }}>Original File Size: {(item.original_size / 1024).toFixed(2)} MB</Text>
+    //             <Text style={{ fontSize: 12, color: 'gray' }}>{item.original_path}</Text>
+    //           </View>
+    //           <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
+    //             <Text style={{ color: 'white' }}>Delete</Text>
+    //           </TouchableOpacity>
+    //         </View>
+    //       </View>
+    //     )}
+    //   />
+    // </View>
+
+    <View style={styles.container}>
+      <Text style={styles.header}>Duplicate Files</Text>
+
       <FlatList
         data={duplicates}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id?.toString()}
         renderItem={({ item, index }) => (
-          <View style={{marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Set: {index + 1}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <View style={styles.card}>
+            <Text style={styles.setHeader}>Set {index + 1}</Text>
+
+            {/* Duplicate File Section */}
+            <View style={styles.fileRow}>
               {renderFilePreview(item.duplicate_path)}
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Duplicate File: {item.duplicate_name}</Text>
-                <Text style={{ color: 'gray', fontSize: 12 }}>Duplicate File Size: {(item.duplicate_size / 1024).toFixed(2)} MB</Text>
-                <Text style={{ fontSize: 12, color: 'gray' }}>Similarity: {item.similarity_score}%</Text>
-                <Text style={{ fontSize: 12, color: 'gray' }}>{item.duplicate_path}</Text>
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileName}>Duplicate File: {item.duplicate_name}</Text>
+                <Text style={styles.fileDetails}>Size: {(item.duplicate_size / 1024).toFixed(2)} MB</Text>
+                <Text style={styles.fileDetails}>Similarity: {item.similarity_score}%</Text>
+                <Text style={styles.filePath}>{item.duplicate_path}</Text>
               </View>
-              <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
-                <Text style={{ color: 'white' }}>Delete</Text>
+              <TouchableOpacity style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+
+            {/* Original File Section */}
+            <View style={styles.fileRow}>
               {renderFilePreview(item.original_path)}
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Original File : {item.original_name}</Text>
-                <Text style={{ color: 'gray', fontSize: 12 }}>Original File Size: {(item.original_size / 1024).toFixed(2)} MB</Text>
-                <Text style={{ fontSize: 12, color: 'gray' }}>{item.original_path}</Text>
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileName}>Original File: {item.original_name}</Text>
+                <Text style={styles.fileDetails}>Size: {(item.original_size / 1024).toFixed(2)} MB</Text>
+                <Text style={styles.filePath}>{item.original_path}</Text>
               </View>
-              <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
-                <Text style={{ color: 'white' }}>Delete</Text>
+              <TouchableOpacity style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -101,3 +145,73 @@ export default function ResultsScreen() {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: "#f5f5f5", // Light gray background like CCleaner UI
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
+  card: {
+    backgroundColor: "#ffffff", // White card background
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
+  },
+  setHeader: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 10,
+  },
+  fileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  fileInfo: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  fileName: {
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#333",
+  },
+  fileDetails: {
+    fontSize: 12,
+    color: "#666",
+  },
+  filePath: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 3,
+  },
+  deleteButton: {
+    backgroundColor: "#D9534F", // CCleaner-style red button
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+});

@@ -36,7 +36,6 @@ export default function Sidebar() {
       <TouchableOpacity onPress={() => navigateTo('AboutUs')} style={styles.menuItemWrapper}>
         <Text style={styles.menuItem}>About Us</Text>
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => navigateTo('Contacts')} style={styles.menuItemWrapper}>
         <Text style={styles.menuItem}>Contacts</Text>
       </TouchableOpacity>
@@ -47,36 +46,41 @@ export default function Sidebar() {
 const styles = StyleSheet.create({
   sidebar: {
     position: 'absolute',
-    top: 50, // Adjust based on Navbar height
+    top: 50, // Start from the very top
     left: 0,
-    width: 250, // Sidebar width
-    backgroundColor: '#fff',
-    borderRightWidth: 1,
-    borderRightColor: '#ccc',
-    zIndex: 1,
+    width: 260,
+    height: '100%', // Cover full height of the screen
+    backgroundColor: '#ffffff', // Solid white background
     paddingVertical: 10,
-    justifyContent: 'flex-start', // Aligns items from top
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 10, // Higher elevation to stay above other elements
+    zIndex: 1000, // Ensures it's rendered above everything
   },
   menuItemWrapper: {
-    width: '100%', // Makes sure each button takes full width
-    marginBottom: 5, // Adds space between items
+    width: '100%',
+    marginBottom: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   menuItem: {
-    width: '100%', // Ensures full-width touch area
-    paddingVertical: 20, // Adds vertical spacing
-    paddingHorizontal: 15, // Adds horizontal padding
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333', // Dark text for visibility
-    textAlign: 'left', // Align text to the left
-    backgroundColor: '#f8f8f8', // Light background for contrast
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    // Shadow effect for both Android and iOS
-    elevation: 3, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // iOS shadow offset
-    shadowOpacity: 0.3, // iOS shadow opacity
-    shadowRadius: 4, // iOS shadow radius
+    color: '#333', // Dark text for contrast
+    textAlign: 'left',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: '#e0e0e0', // Light grey button background
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });
