@@ -5,8 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -35,15 +37,34 @@ class MainActivity : ReactActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+    // Permission request launcher for background service
+    private val requestBackgroundPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            showPermissionRationale("This app needs permission to run in the background.")
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestStoragePermission()
+        requestBackgroundPermission.launch(Manifest.permission.FOREGROUND_SERVICE)
+
+        if (hasBackgroundPermission()) {
+            Toast.makeText(this, "Background permission granted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Background permission not granted", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onResume() {
         super.onResume()
         if (!hasRequiredPermissions()) {
             requestStoragePermission()
+        }
+        if (!hasBackgroundPermission()) {
+            requestBackgroundPermission.launch(Manifest.permission.FOREGROUND_SERVICE)
         }
     }
 
@@ -64,6 +85,16 @@ class MainActivity : ReactActivity() {
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    /**
+     * Check if the background permission is granted.
+     */
+    private fun hasBackgroundPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.FOREGROUND_SERVICE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**
@@ -125,4 +156,3 @@ class MainActivity : ReactActivity() {
 
     override fun createReactActivityDelegate(): ReactActivityDelegate =
         DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-}
