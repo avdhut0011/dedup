@@ -22,7 +22,7 @@ const ScanProgressUI = ({ progress, categories }) => {
             <Text style={styles.categoryTitle}>{category.toUpperCase()} Files</Text>
             <Text>Scanned: {data.scanned} / {data.totalFiles}</Text>
             <Text>Duplicates Found: {data.duplicates}</Text>
-            <Progress.Bar progress={data.scanned / data.totalFiles || 0} width={200} height={5} color="#28A745" />
+            {/* <Progress.Bar progress={data.scanned / data.totalFiles || 0} width={200} height={5} color="#28A745" /> */}
 
             {/* Display Duplicate Files */}
             {data.duplicateFiles && data.duplicateFiles.length > 0 && (
