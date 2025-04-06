@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity ,StyleSheet } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import Video from 'react-native-video';
 import SQLite from 'react-native-sqlite-storage';
 
@@ -36,8 +36,6 @@ export default function ResultsScreen() {
       );
     });
   };
- 
-  
   useEffect(() => {
     getDuplicateFiles(setDuplicates);
   }, []);
@@ -67,42 +65,6 @@ export default function ResultsScreen() {
   console.log("result")
 
   return (
-    // <View style={{ flex: 1, padding: 10 }}>
-    //   <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Duplicate Files</Text>
-    //   <FlatList
-    //     data={duplicates}
-    //     keyExtractor={(item) => item.id.toString()}
-    //     renderItem={({ item, index }) => (
-    //       <View style={{marginBottom: 10 }}>
-    //         <Text style={{ fontWeight: 'bold', marginTop: 10 }}>Set: {index + 1}</Text>
-    //         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-    //           {renderFilePreview(item.duplicate_path)}
-    //           <View style={{ flex: 1, marginLeft: 10 }}>
-    //             <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Duplicate File: {item.duplicate_name}</Text>
-    //             <Text style={{ color: 'gray', fontSize: 12 }}>Duplicate File Size: {(item.duplicate_size / 1024).toFixed(2)} MB</Text>
-    //             <Text style={{ fontSize: 12, color: 'gray' }}>Similarity: {item.similarity_score}%</Text>
-    //             <Text style={{ fontSize: 12, color: 'gray' }}>{item.duplicate_path}</Text>
-    //           </View>
-    //           <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
-    //             <Text style={{ color: 'white' }}>Delete</Text>
-    //           </TouchableOpacity>
-    //         </View>
-    //         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-    //           {renderFilePreview(item.original_path)}
-    //           <View style={{ flex: 1, marginLeft: 10 }}>
-    //             <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>Original File : {item.original_name}</Text>
-    //             <Text style={{ color: 'gray', fontSize: 12 }}>Original File Size: {(item.original_size / 1024).toFixed(2)} MB</Text>
-    //             <Text style={{ fontSize: 12, color: 'gray' }}>{item.original_path}</Text>
-    //           </View>
-    //           <TouchableOpacity style={{ padding: 10, backgroundColor: 'red', borderRadius: 5 }}>
-    //             <Text style={{ color: 'white' }}>Delete</Text>
-    //           </TouchableOpacity>
-    //         </View>
-    //       </View>
-    //     )}
-    //   />
-    // </View>
-
     <View style={styles.container}>
       <Text style={styles.header}>Duplicate Files</Text>
 
