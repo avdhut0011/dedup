@@ -22,7 +22,7 @@ export default function AboutUsScreen() {
           At <Text style={styles.highlight}>Dedup</Text>, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data when you use our app.
         </Text>
         <Text style={styles.content}>
-          <Text style={styles.bold}>1. Information We Collect:</Text> We collect minimal information necessary to provide our services, such as file metadata (e.g., file names, sizes, and types) to identify duplicates. We do not access or store the content of your files.
+          <Text style={styles.bold}>1. Information We Collect:</Text> We collect minimal information necessary to provide our services, such as file metadata (e.g., file names, sizes, and types) to identify duplicates. We do not store the content of your files.
         </Text>
         <Text style={styles.content}>
           <Text style={styles.bold}>2. How We Use Your Information:</Text> The information we collect is used solely for the purpose of identifying and managing duplicate files. We do not share, sell, or distribute your data to third parties.
