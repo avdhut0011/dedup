@@ -18,28 +18,45 @@ export default function AboutUsScreen() {
       {/* Privacy Policy Section */}
       <View style={styles.card}>
         <Text style={styles.subHeading}>PRIVACY POLICY</Text>
+
         <Text style={styles.content}>
           At <Text style={styles.highlight}>Dedup</Text>, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data when you use our app.
         </Text>
+
         <Text style={styles.content}>
-          <Text style={styles.bold}>1. Information We Collect:</Text> We collect minimal information necessary to provide our services, such as file metadata (e.g., file names, sizes, and types) to identify duplicates. We do not store the content of your files.
+          <Text style={styles.bold}>1. Information We Collect:</Text> We collect minimal information necessary to provide our services, such as file metadata (e.g., file names, sizes, and types) to identify duplicates.
+          <Text style={styles.highlightLine}>
+            🔒 We do not store the content of your files.
+          </Text>
         </Text>
+
         <Text style={styles.content}>
-          <Text style={styles.bold}>2. How We Use Your Information:</Text> The information we collect is used solely for the purpose of identifying and managing duplicate files. We do not share, sell, or distribute your data to third parties.
+          <Text style={styles.bold}>2. How We Use Your Information:</Text> The information we collect is used solely for the purpose of identifying and managing duplicate files.
+          <Text style={styles.highlightLine}>
+            🚫 We do not share, sell, or distribute your data to third parties.
+          </Text>
         </Text>
+
         <Text style={styles.content}>
-          <Text style={styles.bold}>3. Data Security:</Text> We implement industry-standard security measures to protect your data from unauthorized access, alteration, or disclosure. All file processing is done locally on your device, ensuring your data never leaves your device.
+          <Text style={styles.bold}>3. Data Security:</Text> We implement industry-standard security measures to protect your data from unauthorized access, alteration, or disclosure.
+          <Text style={styles.highlightLine}>
+            🔐 All file processing is done locally on your device, ensuring your data never leaves your device.
+          </Text>
         </Text>
+
         <Text style={styles.content}>
           <Text style={styles.bold}>4. Permissions:</Text> To provide our services, we request access to your device's storage. This permission is used only to scan and manage files within the app.
         </Text>
+
         <Text style={styles.content}>
           <Text style={styles.bold}>5. Changes to This Policy:</Text> We may update this Privacy Policy from time to time. Any changes will be reflected in the app, and we encourage you to review this policy periodically.
         </Text>
+
         <Text style={styles.content}>
           If you have any questions or concerns about our Privacy Policy, please contact us at <Text style={styles.highlight}>support@dedup.com</Text>.
         </Text>
       </View>
+
 
       {/* Footer */}
       <Text style={styles.footer}>© 2025 Dedup. All rights reserved.</Text>
@@ -89,6 +106,11 @@ const styles = StyleSheet.create({
   highlight: {
     color: "#007bff", // Professional blue highlight
     fontWeight: "bold",
+  },
+  highlightLine: {
+    fontWeight: 'bold',
+    color: '#008000', // green or use your primary theme color
+    marginVertical: 4,
   },
   bold: {
     fontWeight: "bold",
