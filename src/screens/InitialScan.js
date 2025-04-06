@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
 
 export default function InitialScan() {
-  const [scanBtnText, setScanBtnText] = useState('Start Initial Scan');
+  const [scanBtnText, setScanBtnText] = useState('Start Files Scan');
   const [scanCompleted, setScanCompleted] = useState(false); // Track scan completion
   const navigation = useNavigation(); // Use navigation
   const [isScanning, setIsScanning] = useState(false);
@@ -28,12 +28,17 @@ export default function InitialScan() {
   const checkFirstLaunch = async () => {
     const isFirstLaunch = await AsyncStorage.getItem('isFirstLaunch');
     if (isFirstLaunch === null) {
-      await AsyncStorage.setItem('isFirstLaunch', 'false');
+      await AsyncStorage.setItem('isFirstLaunch', 'true');
       console.log('First Launch: True');
       return true;
     }
-    console.log('First Launch: False');
-    return false;
+    if (isFirstLaunch === 'true') {
+      console.log('Initial Scan Remaining: True');
+      return true;
+    }
+    if (isFirstLaunch === 'false') {
+      return false;
+    }
   };
   const startScan = async () => {
     console.log('IN startScan')
@@ -46,6 +51,7 @@ export default function InitialScan() {
       // Update button to "Results"
       setScanBtnText("Results");
       setScanCompleted(true);
+      await AsyncStorage.setItem('isFirstLaunch', 'false');
     // }
     setIsScanning(false);
   };
@@ -192,7 +198,7 @@ export default function InitialScan() {
   const getFileExtension = filePath => {
     return filePath.split('.').pop().toLowerCase();
   };
-  const processFilesInCategory = async (filetype, files, extensions) => {
+  const processFilesInCategory = async (filetype, files, extensions, threshold) => {
     console.log('In processFilesInCategory: ' + filetype);
     const hashes = [];
     const duplicates = [];
@@ -209,7 +215,7 @@ export default function InitialScan() {
         // Fetch existing hashes for this category
         const existingHashes = await fetchHashesFromDatabase(extension);
         // Compare the hash with existing hashes
-        const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, 10);
+        const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, threshold);
         if (results.length > 0) {
           // Duplicate(s) found
           for (const result of results) {
@@ -237,10 +243,12 @@ export default function InitialScan() {
 
   const performInitialScan = async () => {
     const results = {};
+    const storedThreshold = await AsyncStorage.getItem('similarityThreshold');
+    const threshold = Number(storedThreshold);
     for (const [category, extensions] of Object.entries(fileCategories)) {
       const files = await scanFilesInCategory(category, extensions);
       console.log(files)
-      const { hashes, duplicates } = await processFilesInCategory(category, files, extensions);
+      const { hashes, duplicates } = await processFilesInCategory(category, files, extensions, threshold);
       console.log('processFilesInCategory done for:' + extensions)
       results[category] = {
         totalFiles: files.length,
