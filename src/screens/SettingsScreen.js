@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, NativeEventEmitter, NativeModules, StyleSheet, FlatList, AppState, Alert,TouchableOpacity } from 'react-native';
+import { View, Text, Button, NativeEventEmitter, NativeModules, StyleSheet, FlatList, AppState, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
@@ -95,7 +95,103 @@ const SettingsScreen = () => {
 
     await AsyncStorage.setItem('monitoredDirectories', JSON.stringify(updatedMonitoredDirs));
   };
+  // Initialize the Database
+  const initializeDatabase = () => {
+    db.transaction(tx => {
+      // Create Files_Record table
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Files_Record (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              file_name TEXT NOT NULL,
+              file_type TEXT NOT NULL,
+              file_path TEXT NOT NULL UNIQUE,
+              file_size INTEGER NOT NULL,
+              file_hash TEXT NOT NULL,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )`,
+        [],
+        () => console.log('Files_Record table created successfully'),
+        error => console.error('Error creating Files_Record table:', error),
+      );
 
+      // Create Duplicates_Record table
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Duplicates_Record (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              original_fid INTEGER NOT NULL,
+              duplicate_fid INTEGER NOT NULL,
+              similarity_score INTEGER NOT NULL,
+              detected_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (original_fid) REFERENCES Files_Record (id),
+              FOREIGN KEY (duplicate_fid) REFERENCES Files_Record (id)
+            )`,
+        [],
+        () => console.log('Duplicates_Record table created successfully'),
+        error =>
+          console.error('Error creating Duplicates_Record table:', error),
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Initial_Scan_Results (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  file_type TEXT UNIQUE,
+                  total_files INTEGER,
+                  duplicate_files INTEGER,
+                  scan_date DATETIME DEFAULT CURRENT_TIMESTAMP
+                );`,
+        [],
+        () => console.log('✅ Initial_Scan_Results table created'),
+        (_, error) =>
+          console.error('Error creating Initial_Scan_Results table:', error),
+      );
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS deleted_duplicates (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  file_name TEXT NOT NULL,
+                  file_path TEXT NOT NULL,
+                  file_size_kb INTEGER NOT NULL,
+                  file_category TEXT,
+                  similarity_percentage INTEGER,
+                  deletion_date DATETIME DEFAULT CURRENT_TIMESTAMP
+              );`,
+        [],
+        () => console.log('✅ Deleted_duplicates table created'),
+        (_, error) =>
+          console.error('Error creating deleted_duplicates table:', error),
+      );
+      // Create indexes
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_files_record_file_path ON Files_Record (file_path)',
+        [],
+        () => console.log('Index on file_path created successfully'),
+        error => console.error('Error creating index on file_path:', error),
+      );
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_files_record_file_type ON Files_Record (file_type)',
+        [],
+        () => console.log('Index on file_type created successfully'),
+        error => console.error('Error creating index on file_type:', error),
+      );
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_duplicates_record_original_fid ON Duplicates_Record (original_fid)',
+        [],
+        () => console.log('Index on original_fid created successfully'),
+        error => console.error('Error creating index on original_fid:', error),
+      );
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_duplicates_record_duplicate_fid ON Duplicates_Record (duplicate_fid)',
+        [],
+        () => console.log('Index on duplicate_fid created successfully'),
+        error => console.error('Error creating index on duplicate_fid:', error),
+      );
+      tx.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_duplicates_record_similarity_score ON Duplicates_Record (similarity_score)',
+        [],
+        () => console.log('Index on similarity_score created successfully'),
+        error =>
+          console.error('Error creating index on similarity_score:', error),
+      );
+    });
+  };
   const getFileExtension = (filePath) => {
     return filePath.split('.').pop().toLowerCase();
   };
@@ -358,6 +454,7 @@ const SettingsScreen = () => {
       );
     });
   };
+
   useEffect(() => {
     const directoryMonitorEvents = new NativeEventEmitter(DirectoryMonitor);
     const handleFileChange = async (event) => {
@@ -381,6 +478,57 @@ const SettingsScreen = () => {
       subscription.remove(); // Cleanup when component unmounts
     };
   }, []);
+
+  useEffect(() => {
+    // initializeDatabase();
+  }, []);
+
+  const truncateInitDb = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM Initial_Scan_Results',
+        [],
+        () =>
+          console.log(
+            'All records from "Initial_Scan_Results" table have been cleared.',
+          ),
+        error => console.error('Error clearing "files" table:', error),
+      );
+    });
+  };
+  const truncateDatabaseFiles = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM Files_Record',
+        [],
+        () =>
+          console.log(
+            'All records from "Files_Record" table have been cleared.',
+          ),
+        error => console.error('Error clearing "files" table:', error),
+      );
+    });
+  };
+  const truncateDatabaseDuplicates = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM Duplicates_Record',
+        [],
+        () =>
+          console.log(
+            'All records from "Duplicates_Record" table have been cleared.',
+          ),
+        error => console.error('Error clearing "files" table:', error),
+      );
+    });
+  };
+  const resetAppData = () => {
+    truncateDatabaseFiles();
+    truncateDatabaseDuplicates();
+    truncateInitDb();
+    AsyncStorage.removeItem('isFirstLaunch');
+    console.log('First Launch set to False')
+  };
 
   return (
     // <View style={styles.container}>
@@ -414,130 +562,130 @@ const SettingsScreen = () => {
     // </View>
 
     <View style={styles.container}>
-            <Text style={styles.heading}>SETTINGS</Text>
-            <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
+      <Text style={styles.heading}>SETTINGS</Text>
+      <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
 
-            <View style={styles.card}>
-                <Picker
-                    selectedValue={selectedDirectory}
-                    style={styles.picker}
-                    onValueChange={(itemValue) => setSelectedDirectory(itemValue)}
-                >
-                    {Object.entries(availableDirectories).map(([key, value]) => (
-                        <Picker.Item key={key} label={key} value={value} />
-                    ))}
-                </Picker>
+      <View style={styles.card}>
+        <Picker
+          selectedValue={selectedDirectory}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedDirectory(itemValue)}
+        >
+          {Object.entries(availableDirectories).map(([key, value]) => (
+            <Picker.Item key={key} label={key} value={value} />
+          ))}
+        </Picker>
 
-                <TouchableOpacity style={styles.startButton} onPress={startMonitoring}>
-                    <Text style={styles.startButtonText}>Start Monitoring</Text>
-                </TouchableOpacity>
-            </View>
+        <TouchableOpacity style={styles.startButton} onPress={startMonitoring}>
+          <Text style={styles.startButtonText}>Start Monitoring</Text>
+        </TouchableOpacity>
+      </View>
 
-            <Text style={styles.subtitle}>Monitored Directories</Text>
+      <Text style={styles.subtitle}>Monitored Directories</Text>
 
-            <FlatList
-                data={monitoredDirectories}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                    <View style={styles.directoryCard}>
-                        <Text style={styles.directoryText}>{item}</Text>
-                        <TouchableOpacity style={styles.stopButton} onPress={() => stopMonitoring(item)}>
-                            <Text style={styles.stopButtonText}>Stop</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
-            />
-        </View>
+      <FlatList
+        data={monitoredDirectories}
+        keyExtractor={(item) => item}
+        renderItem={({ item }) => (
+          <View style={styles.directoryCard}>
+            <Text style={styles.directoryText}>{item}</Text>
+            <TouchableOpacity style={styles.stopButton} onPress={() => stopMonitoring(item)}>
+              <Text style={styles.stopButtonText}>Stop</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-      flex: 1,
-      padding: 15,
-      backgroundColor: "#f5f5f5", // Light gray background like CCleaner UI
+    flex: 1,
+    padding: 15,
+    backgroundColor: "#f5f5f5", // Light gray background like CCleaner UI
   },
   heading: {
-      fontSize: 22,
-      fontWeight: "bold",
-      marginBottom: 10,
-      color: "#333",
-      textAlign: "center",
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+    textAlign: "center",
   },
   title: {
-      fontSize: 16,
-      fontWeight: "bold",
-      marginBottom: 15,
-      color: "#444",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#444",
   },
   card: {
-      backgroundColor: "#ffffff", // White card background
-      borderRadius: 12,
-      padding: 15,
-      marginBottom: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3, // Android shadow
+    backgroundColor: "#ffffff", // White card background
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // Android shadow
   },
   picker: {
-      height: 50,
-      width: "100%",
+    height: 50,
+    width: "100%",
   },
   startButton: {
-      backgroundColor: "#007BFF", // Blue button like CCleaner
-      paddingVertical: 12,
-      marginTop: 10,
-      borderRadius: 8,
-      alignItems: "center",
+    backgroundColor: "#007BFF", // Blue button like CCleaner
+    paddingVertical: 12,
+    marginTop: 10,
+    borderRadius: 8,
+    alignItems: "center",
   },
   startButtonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "bold",
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   subtitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#555",
-      marginBottom: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 10,
   },
   directoryCard: {
-      backgroundColor: "#ffffff",
-      borderRadius: 12,
-      padding: 15,
-      marginBottom: 10,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   directoryText: {
-      fontSize: 14,
-      color: "#333",
-      flex: 1,
+    fontSize: 14,
+    color: "#333",
+    flex: 1,
   },
   stopButton: {
-      backgroundColor: "#D9534F", // CCleaner-style red button
-      paddingVertical: 8,
-      paddingHorizontal: 15,
-      borderRadius: 8,
+    backgroundColor: "#D9534F", // CCleaner-style red button
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
   },
   stopButtonText: {
-      color: "#fff",
-      fontWeight: "bold",
-      fontSize: 14,
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
   },
   noDirectoryText: {
-      color: "#888",
-      textAlign: "center",
-      marginTop: 10,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 10,
   },
 });
 
