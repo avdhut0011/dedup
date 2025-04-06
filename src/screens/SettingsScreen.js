@@ -534,40 +534,36 @@ const SettingsScreen = () => {
   };
 
   return (
-    // <View style={styles.container}>
-    //   <Text style={styles.heading}>SETTINGS</Text>
-    //   <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
-
-    //   <Picker
-    //     selectedValue={selectedDirectory}
-    //     style={styles.picker}
-    //     onValueChange={handleDirectoryChange}
-    //   >
-    //     {Object.entries(availableDirectories).map(([key, value]) => (
-    //       <Picker.Item key={key} label={key} value={value} />
-    //     ))}
-    //   </Picker>
-
-    //   <Button title="Start Monitoring" onPress={startMonitoring} color="#000000" />
-
-    //   <Text style={styles.subtitle}>Monitored Directories:</Text>
-    //   <FlatList
-    //     data={monitoredDirectories}
-    //     keyExtractor={(item) => item}
-    //     renderItem={({ item }) => (
-    //       <View style={styles.monitoredDirectory}>
-    //         <Text>{item}</Text>
-    //         <Button title="Stop" onPress={() => stopMonitoring(item)} />
-    //       </View>
-    //     )}
-    //     ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
-    //   />
-    // </View>
-
     <View style={styles.container}>
       <Text style={styles.heading}>SETTINGS</Text>
-      <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
+      {/* Dark/Light Mode Toggle */}
+      <View style={styles.settingsCard}>
+        <TouchableOpacity
+          style={styles.themeToggleButton}
+          onPress={() => setIsDarkMode((prev) => !prev)}
+        >
+          <Text style={styles.themeToggleButtonText}>
+            {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
+      {/* Set Similarity Threshold */}
+      <View style={styles.settingsCard}>
+        <Text style={styles.thresholdLabel}>Set Similarity Threshold</Text>
+        <View style={styles.pickerWrapper}>
+          <Picker selectedValue={selectedThreshold} style={styles.thresholdPicker} onValueChange={(itemValue) => setSelectedThreshold(itemValue)} >   {[30, 40, 50, 60, 70, 80, 90, 100].map((value) => (<Picker.Item key={value} label={`${value}%`} value={value} />))}   </Picker>
+        </View>
+      </View>
+
+      {/* Reset/Clear App Data */}
+      <View style={styles.settingsCard}>
+        <TouchableOpacity style={styles.resetButton} onPress={resetAppData}>
+          <Text style={styles.resetButtonText}>Reset / Clear App Data</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.title}>Select Directory(s) for Automatic Duplicate File Detection</Text>
       <View style={styles.card}>
         <Picker
           selectedValue={selectedDirectory}
@@ -578,14 +574,11 @@ const SettingsScreen = () => {
             <Picker.Item key={key} label={key} value={value} />
           ))}
         </Picker>
-
         <TouchableOpacity style={styles.startButton} onPress={startMonitoring}>
           <Text style={styles.startButtonText}>Start Monitoring</Text>
         </TouchableOpacity>
       </View>
-
       <Text style={styles.subtitle}>Monitored Directories</Text>
-
       <FlatList
         data={monitoredDirectories}
         keyExtractor={(item) => item}
@@ -599,53 +592,6 @@ const SettingsScreen = () => {
         )}
         ListEmptyComponent={<Text style={styles.noDirectoryText}>No directories being monitored</Text>}
       />
-
-            {/* <TouchableOpacity style={styles.themeToggleButton}>
-                    <Text style={styles.themeToggleButtonText}>Toggle Dark/Light Mode</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.thresholdLabel}>Set Similarity Threshold</Text>
-                <Picker
-                    selectedValue={selectedThreshold}
-                    style={styles.picker}
-                    onValueChange={(itemValue) => setSelectedThreshold(itemValue)}
-                >
-                    {[30, 40, 50, 60, 70, 80, 90, 100].map((value) => (
-                        <Picker.Item key={value} label={`${value}%`} value={value} />
-                    ))}
-                </Picker>
-
-                <TouchableOpacity style={styles.resetButton}>
-                    <Text style={styles.resetButtonText}>Reset / Clear App Data</Text>
-                </TouchableOpacity> */}
-
-                {/* Dark/Light Mode Toggle */}
-                <View style={styles.settingsCard}>
-                    <TouchableOpacity
-                      style={styles.themeToggleButton}
-                      onPress={() => setIsDarkMode((prev) => !prev)}
-                    >
-                      <Text style={styles.themeToggleButtonText}>
-                      {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                      </Text>
-                    </TouchableOpacity>
-                </View>
-
-
-              {/* Set Similarity Threshold */}
-              <View style={styles.settingsCard}>   
-                <Text style={styles.thresholdLabel}>Set Similarity Threshold</Text>   
-                <View style={styles.pickerWrapper}>  
-                  <Picker selectedValue={selectedThreshold} style={styles.thresholdPicker}  onValueChange={(itemValue) => setSelectedThreshold(itemValue)} >   {[30, 40, 50, 60, 70, 80, 90, 100].map((value) => (  <Picker.Item key={value} label={`${value}%`} value={value} />))}   </Picker>  
-                </View>
-              </View>
-
-              {/* Reset/Clear App Data */}
-              <View style={styles.settingsCard}>   
-                <TouchableOpacity style={styles.resetButton}>  
-                  <Text style={styles.resetButtonText}>Reset / Clear App Data</Text> 
-                </TouchableOpacity>
-              </View>
 
     </View>
   );
@@ -740,123 +686,123 @@ const styles = StyleSheet.create({
   },
 
   themeToggleButton: {
-     backgroundColor: "#007BFF", // Gray color for neutral toggle
-     paddingVertical: 12,
-     borderRadius: 8,
-     alignItems: "center",
-      marginBottom: 15,
-    },
-    
-    themeToggleButtonText: {
+    backgroundColor: "#007BFF", // Gray color for neutral toggle
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  themeToggleButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-    },
-    
-    thresholdLabel: {
+  },
+
+  thresholdLabel: {
     fontSize: 14,
     color: "#333",
     fontWeight: "bold",
     marginBottom: 5,
     marginTop: 10,
-    },
-    
-    resetButton: {
+  },
+
+  resetButton: {
     backgroundColor: "#007BFF", // Red color like CCleaner reset
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
     marginTop: 15,
-    },
-    
-    resetButtonText: {
+  },
+
+  resetButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-    },
+  },
 
-    thresholdCard: {
-     backgroundColor: "#ffffff",
-     borderRadius: 12,
-     padding: 15,
-     marginBottom: 20,
-     shadowColor: "#000",
-     shadowOffset: { width: 0, height: 4 },
-     shadowOpacity: 0.1,
-     shadowRadius: 4,
-     elevation: 3,
-      },
-      
-      thresholdLabel: {
-     fontSize: 16,
-     fontWeight: "bold",
-     color: "#444",
-     marginBottom: 10,
-      },
-      
-      thresholdPicker: {
-     height: 50,
-     width: "100%",
-     backgroundColor: "#f0f0f0",
-     borderRadius: 8,
-      },
-      settingsCard: {
-         backgroundColor: "#ffffff",
-         borderRadius: 12,
-         padding: 15,
-         marginBottom: 20,
-         shadowColor: "#000",
-         shadowOffset: { width: 0, height: 4 },
-         shadowOpacity: 0.1,
-         shadowRadius: 4,
-         elevation: 3,
-        },
-        
-        themeToggleButton: {
-         backgroundColor: "#6c757d", // Neutral gray
-         paddingVertical: 12,
-         borderRadius: 8,
-         alignItems: "center",
-        },
-        
-        themeToggleButtonText: {
-         color: "#fff",
-         fontSize: 16,
-         fontWeight: "bold",
-        },
-        
-        thresholdLabel: {
-         fontSize: 16,
-         fontWeight: "bold",
-         color: "#444",
-         marginBottom: 10,
-        },
-        
-        pickerWrapper: {
-         backgroundColor: "black",
-         borderRadius: 8,
-         overflow: "hidden",
-        },
-        
-        thresholdPicker: {
-         height: 50,
-         width: "100%",
-        },
-        
-        resetButton: {
-         backgroundColor: "#DC3545", // Danger red
-         paddingVertical: 12,
-         borderRadius: 8,
-         alignItems: "center",
-        },
-        
-        resetButtonText: {
-         color: "#fff",
-         fontSize: 16,
-         fontWeight: "bold",
-        },
-        
-    
+  thresholdCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  thresholdLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#444",
+    marginBottom: 10,
+  },
+
+  thresholdPicker: {
+    height: 50,
+    width: "100%",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+  },
+  settingsCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  themeToggleButton: {
+    backgroundColor: "#6c757d", // Neutral gray
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  themeToggleButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  thresholdLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#444",
+    marginBottom: 10,
+  },
+
+  pickerWrapper: {
+    backgroundColor: "black",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+
+  thresholdPicker: {
+    height: 50,
+    width: "100%",
+  },
+
+  resetButton: {
+    backgroundColor: "#DC3545", // Danger red
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  resetButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+
 });
 
 export default SettingsScreen;
