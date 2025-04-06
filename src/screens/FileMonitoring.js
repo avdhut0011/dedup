@@ -147,6 +147,9 @@ const styles = StyleSheet.create({
     picker: {
         height: 50,
         width: "100%",
+        backgroundColor: "black",
+        borderRadius: 8,
+        overflow: "hidden",
     },
     startButton: {
         backgroundColor: "#007BFF", // Blue start button like CCleaner
