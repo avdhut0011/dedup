@@ -24,12 +24,13 @@ export default function Sidebar() {
         <Text style={styles.menuItem}>Dashboard</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity onPress={() => navigateTo('FileMonitoring')} style={styles.menuItemWrapper}>
+      {/* <TouchableOpacity onPress={() => navigateTo('FileMonitoring')} style={styles.menuItemWrapper}>
         <Text style={styles.menuItem}>File Monitoring</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigateTo('C++Testing')} style={styles.menuItemWrapper}>
+      </TouchableOpacity> */}
+      {/* <TouchableOpacity onPress={() => navigateTo('C++Testing')} style={styles.menuItemWrapper}>
         <Text style={styles.menuItem}>C++ Testing</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+      
       <TouchableOpacity onPress={() => navigateTo('Settings')} style={styles.menuItemWrapper}>
         <Text style={styles.menuItem}>Settings</Text>
       </TouchableOpacity>
