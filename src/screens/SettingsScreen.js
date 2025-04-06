@@ -16,7 +16,7 @@ const SettingsScreen = () => {
   const [selectedDirectory, setSelectedDirectory] = useState('');
   const [monitoredDirectories, setMonitoredDirectories] = useState([]);
   const [appState, setAppState] = useState(AppState.currentState);
-  const [selectedThreshold, setSelectedThreshold] = useState(50); // default 50%
+  const [selectedThreshold, setSelectedThreshold] = useState(60); // default 50%
   const [isDarkMode, setIsDarkMode] = useState(false);
 
 
@@ -26,16 +26,15 @@ const SettingsScreen = () => {
       try {
         const storedDirectory = await AsyncStorage.getItem('selectedDirectory');
         const storedMonitoredDirs = await AsyncStorage.getItem('monitoredDirectories');
-
+        const storedThreshold = await AsyncStorage.getItem('similarityThreshold');
         if (storedDirectory) setSelectedDirectory(storedDirectory);
+        if (selectedThreshold) setSelectedThreshold(Number(storedThreshold));
         if (storedMonitoredDirs) setMonitoredDirectories(JSON.parse(storedMonitoredDirs));
       } catch (error) {
         console.error('Error retrieving stored data:', error);
       }
     };
     fetchStoredData();
-  }, []);
-  useEffect(() => {
     const fetchDirectories = async () => {
       try {
         const dirsJson = await DirectoryMonitor.getAvailableDirectories();
@@ -53,6 +52,7 @@ const SettingsScreen = () => {
     };
     fetchDirectories();
   }, []);
+
   // Detect App Termination (Clear Data When Fully Closed)
   useEffect(() => {
     const handleAppStateChange = async (nextAppState) => {
@@ -69,14 +69,14 @@ const SettingsScreen = () => {
 
       setAppState(nextAppState);
     };
-
     const appStateListener = AppState.addEventListener('change', handleAppStateChange);
     return () => appStateListener.remove();
   }, [appState]);
-  // Save selected directory & update monitored directories
-  const handleDirectoryChange = async (itemValue) => {
-    setSelectedDirectory(itemValue);
-    await AsyncStorage.setItem('selectedDirectory', itemValue);
+  // Save selected threshold & update it
+  const handleThresholdChange = async (value) => {
+    setSelectedThreshold(value);
+    await AsyncStorage.setItem('similarityThreshold', value.toString());
+    console.log("Threshold set to: " + value)
   };
   const startMonitoring = async () => {
     if (selectedDirectory) {
@@ -552,8 +552,17 @@ const SettingsScreen = () => {
       <View style={styles.settingsCard}>
         <Text style={styles.thresholdLabel}>Set Similarity Threshold</Text>
         <View style={styles.pickerWrapper}>
-          <Picker selectedValue={selectedThreshold} style={styles.thresholdPicker} onValueChange={(itemValue) => setSelectedThreshold(itemValue)} >   {[30, 40, 50, 60, 70, 80, 90, 100].map((value) => (<Picker.Item key={value} label={`${value}%`} value={value} />))}   </Picker>
+          <Picker
+            selectedValue={selectedThreshold}
+            style={styles.thresholdPicker}
+            onValueChange={(itemValue) => handleThresholdChange(itemValue)}
+          >
+            {[30, 40, 50, 60, 70, 80, 90, 100].map((value) => (
+              <Picker.Item key={value} label={`${value}%`} value={value} />
+            ))}
+          </Picker>
         </View>
+
       </View>
 
       {/* Reset/Clear App Data */}
