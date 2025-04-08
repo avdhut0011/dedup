@@ -4,11 +4,13 @@ import { PieChart } from 'react-native-chart-kit';
 import CpuUsage from '../components/CpuUsage';
 import StorageStats from '../components/StorageStats';
 import * as Progress from "react-native-progress";
+import { useNavigation } from '@react-navigation/native';
 //import DonutChart from "react-native-donut-chart";
 
 const { FileScannerModule } = NativeModules;
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const [fileDistribution, setFileDistribution] = useState([]);
   const [cpuUsage, setCpuUsage] = useState(0);
   const [usedStorage, setUsedStorage] = useState(73.3); // Example: Used storage in GB
@@ -25,7 +27,9 @@ export default function HomeScreen() {
     }
     return color;
   };
-
+  const navigateTo = (screen) => {
+    navigation.navigate(screen);
+  };
   const scanFiles = async () => {
     try {
       const files = await FileScannerModule.scanFiles();
@@ -130,7 +134,7 @@ export default function HomeScreen() {
 
         <View style={styles.card}>
           {/* Scan Button */}
-          <TouchableOpacity style={styles.scanButton}>
+          <TouchableOpacity onPress={() => navigateTo('Scan')} style={styles.scanButton}>
             <Text style={styles.scanButtonText}>SCAN FILES</Text>
           </TouchableOpacity>
         </View>
