@@ -255,7 +255,8 @@ const SettingsScreen = () => {
       console.log(hashes)
 
       // Compare the new hash with the array of hashes
-      const threshold = 55; // Set your threshold here
+    const storedThreshold = await AsyncStorage.getItem('similarityThreshold');
+    const threshold = Number(storedThreshold);
       const results = await SSDeepTurboModule.compareHashWithArray(
         hash,
         hashes,
@@ -525,12 +526,13 @@ const SettingsScreen = () => {
       );
     });
   };
-  const resetAppData = () => {
+  const resetAppData = async () => {
     truncateDatabaseFiles();
     truncateDatabaseDuplicates();
     truncateInitDb();
-    AsyncStorage.removeItem('isFirstLaunch');
-    console.log('First Launch set to False')
+    await AsyncStorage.removeItem('isFirstLaunch');
+    console.log('First Launch set to False');
+    await AsyncStorage.removeItem('hasOnboarded');
   };
 
   return (
