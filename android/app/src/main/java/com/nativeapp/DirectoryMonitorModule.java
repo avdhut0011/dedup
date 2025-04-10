@@ -24,7 +24,6 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             ".txt", ".pdf", ".doc", ".docx", ".pptx", ".ppt",
             ".csv", ".xlsx", ".mkv", ".mp3", ".mp4"));
     private static final Set<String> ignoreFolders = new HashSet<>(Arrays.asList(
-            "com.", // App-specific directories
             "cn.", // App-specific directories
             ".cache", // Cache directories
             "cache", // Cache directories
@@ -41,7 +40,6 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             "Recycle.Bin", // Windows-style recycle bin
             ".trash", // Trash folder (Linux/Android)
             ".nomedia", // Prevents media scanning
-            "System Volume Information", // Windows system files
             "Alarms", // Alarm sounds
             "Notifications", // Notification sounds
             "Ringtones", // Ringtone sounds
