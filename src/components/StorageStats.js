@@ -157,6 +157,7 @@ const styles = {
         backgroundColor: "#fff",
         borderRadius: 12,
         padding: 20,
+        paddingTop: 0,
         marginVertical: 15,
         width: Dimensions.get("window").width - 40,
         alignItems: "center",

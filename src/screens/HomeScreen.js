@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    paddingTop: 0,
     backgroundColor: "#fff", // White background for a clean UI
   },
 
