@@ -1,6 +1,6 @@
-import { NativeModules, Text, View } from 'react-native';
+import { NativeModules, Text, View, Dimensions } from 'react-native';
 import { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native-gesture-handler';
+import * as Progress from "react-native-progress";
 
 const { StorageModule } = NativeModules;
 
@@ -9,13 +9,24 @@ const formatGB = (bytes) => (bytes / (1024 ** 3)).toFixed(2) + ' GB';
 
 const StorageStats = () => {
     const [storageStats, setStorageStats] = useState(null);
+    const [usedStorage, setUsedStorage] = useState(0);
+    const [totalStorage, setTotalStorage] = useState(0);
+    const [freeStorage, setFreeStorage] = useState(0); 
+    const [hiddenCache, setHiddenCache] = useState(0.2);
+    const [unneededFiles, setUnneededFiles] = useState(0.23);
+    const [filesToReview, setFilesToReview] = useState(10.67);
+
+    const calculatePercentage = (value) => value / totalStorage;
 
     useEffect(() => {
         const fetchStorageStats = async () => {
             try {
                 const storageData = await StorageModule.getStorageStats();
-                const stats = JSON.parse(storageData);
+                const stats = await JSON.parse(storageData);
                 setStorageStats(stats);
+                setUsedStorage((stats.usedStorage / 1e9).toFixed(2));
+                setTotalStorage((stats.totalStorage / 1e9).toFixed(2));
+                setFreeStorage((stats.freeStorage / 1e9).toFixed(2));
             } catch (error) {
                 console.error('Error fetching storage stats:', error);
             }
@@ -28,10 +39,84 @@ const StorageStats = () => {
     }
 
     return (
-        <ScrollView style={{ padding: 20 }}>
-        <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 10 }}>Storage Statistics</Text>
+        <View style={{ padding: 20 }}>
+            <View style={styles.card}>
+                {/* Storage Usage Heading */}
+                <Text style={styles.cardHeading}>Storage Overview</Text>
 
-        {/* <Text style={styles.statItem}>Total Storage: {formatGB(storageStats.totalStorage)}</Text>
+                {/* Free Space Text */}
+                <Text style={styles.storageText}>{usedStorage} GB Used</Text>
+                <Text style={styles.freeUpText}>
+                    Available Storage <Text style={{ fontWeight: 'bold' }}>~{freeStorage} GB</Text>
+                </Text>
+
+                {/* Progress Bars */}
+                <View style={styles.progressBarContainer}>
+                    <Progress.Bar
+                        progress={calculatePercentage(usedStorage)}
+                        width={Dimensions.get("window").width - 60}
+                        height={12}
+                        color="#4CAF50" // Green for used storage
+                        borderRadius={8}
+                        borderWidth={1}
+                        borderColor="#ddd"
+                        unfilledColor="#e0e0e0"
+                    />
+                    <Progress.Bar
+                        progress={calculatePercentage(hiddenCache)}
+                        width={Dimensions.get("window").width - 60}
+                        height={12}
+                        color="#FFA500" // Orange for hidden cache
+                        borderRadius={8}
+                        borderWidth={1}
+                        borderColor="transparent"
+                        unfilledColor="transparent"
+                        style={styles.overlayBar}
+                    />
+                    <Progress.Bar
+                        progress={calculatePercentage(filesToReview)}
+                        width={Dimensions.get("window").width - 60}
+                        height={12}
+                        color="#008000" // Dark Green for files to review
+                        borderRadius={8}
+                        borderWidth={1}
+                        borderColor="transparent"
+                        unfilledColor="transparent"
+                        style={styles.overlayBar}
+                    />
+                </View>
+
+                {/* Legend */}
+                <View style={styles.legendContainer}>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#FFA500" }]} />
+                        <Text style={styles.legendText}>Hidden caches - {hiddenCache} GB</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#008000" }]} />
+                        <Text style={styles.legendText}>Documents - {(storageStats.documents / 1e9).toFixed(2)} GB</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#0000FF" }]} />
+                        <Text style={styles.legendText}>Images - {(storageStats.images / 1e9).toFixed(2)} GB</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#FFA500" }]} />
+                        <Text style={styles.legendText}>Videos - {(storageStats.videos / 1e9).toFixed(2)} GB</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#008000" }]} />
+                        <Text style={styles.legendText}>Audios - {(storageStats.audios / 1e9).toFixed(2)} GB</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                        <View style={[styles.colorBox, { backgroundColor: "#0000FF" }]} />
+                        <Text style={styles.legendText}>Unneeded Files - {unneededFiles} GB</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 10 }}>Storage Statistics</Text> */}
+            {/* <Text style={styles.statItem}>Total Storage: {formatGB(storageStats.totalStorage)}</Text>
         <Text style={styles.statItem}>Used Storage: {formatGB(storageStats.usedStorage)}</Text>
         <Text style={styles.statItem}>Available Storage: {formatGB(storageStats.availableStorage)}</Text>
         <Text style={styles.statItem}>System Storage: {formatGB(storageStats.systemStorage)}</Text>
@@ -44,7 +129,7 @@ const StorageStats = () => {
         <Text style={styles.statItem}>Audio: {formatGB(storageStats.audioSize)}</Text>
         <Text style={styles.statItem}>Documents: {formatGB(storageStats.documentsSize)}</Text>
         <Text style={styles.statItem}>APKs: {formatGB(storageStats.apkSize)}</Text> */}
-         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Storage Stats</Text>
+            {/* <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Storage Stats</Text>
             {storageStats && (
                 <>
                     <Text>Total Storage: {(storageStats.totalStorage / 1e9).toFixed(2)} GB</Text>
@@ -56,8 +141,8 @@ const StorageStats = () => {
                     <Text>Documents: {(storageStats.documents / 1e6).toFixed(2)} MB</Text>
                     <Text>APKs: {(storageStats.apks / 1e6).toFixed(2)} MB</Text>
                 </>
-            )}
-    </ScrollView>
+            )} */}
+        </View>
     );
 };
 
@@ -66,6 +151,71 @@ const styles = {
     statItem: {
         fontSize: 18,
         marginVertical: 5,
+    },
+    /* Card Design */
+    card: {
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 20,
+        marginVertical: 15,
+        width: Dimensions.get("window").width - 40,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 8, // Enhanced shadow for a pop-up effect
+    },
+
+    /* Card Headings */
+    heading: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#333",
+        marginBottom: 10,
+    },
+
+    /* Storage Text */
+    storageText: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#444",
+    },
+    freeUpText: {
+        fontSize: 16,
+        color: "#666",
+        marginBottom: 10,
+    },
+
+    /* Progress Bar */
+    progressBarContainer: {
+        marginVertical: 10,
+    },
+    overlayBar: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+    },
+
+    /* Legend */
+    legendContainer: {
+        marginTop: 15,
+    },
+    legendItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 5,
+    },
+    colorBox: {
+        width: 15,
+        height: 15,
+        borderRadius: 3,
+        marginRight: 10,
+    },
+    legendText: {
+        fontSize: 14,
+        color: "#555",
     },
 };
 
