@@ -199,6 +199,7 @@ export default function InitialScan() {
   };
   const processFilesInCategory = async (filetype, files, extensions, threshold) => {
     console.log('In processFilesInCategory: ' + filetype);
+    const category = filetype;
     const hashes = [];
     const duplicates = [];
     for (const file of files) {
@@ -233,6 +234,13 @@ export default function InitialScan() {
           await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
         }
         hashes.push({ file, hash });
+        setCategories((prev) => ({
+          ...prev,
+          [category]: {
+            totalFiles: files.length,
+            scanned: prev[category].scanned + 1
+          },
+        }));
       } catch (error) {
         console.warn(`Error processing file: ${file}, ${error.message}`);
       }
@@ -270,19 +278,19 @@ export default function InitialScan() {
       [category]: {
         totalFiles: totalFilesCount,
         duplicates,
-        scanned: prev[category].scanned + 1,
+        scanned: prev[category].scanned,
         duplicateFiles, // Store duplicate file paths and similarity
       },
     }));
     // Calculate overall progress
-    const totalScanned = Object.values(categories).reduce(
-      (sum, cat) => sum + cat.scanned,
-      0
-    );
-    const totalFilesOverall = Object.values(categories).reduce(
-      (sum, cat) => sum + cat.totalFiles,
-      0
-    );
+    // const totalScanned = Object.values(categories).reduce(
+    //   (sum, cat) => sum + cat.scanned,
+    //   0
+    // );
+    // const totalFilesOverall = Object.values(categories).reduce(
+    //   (sum, cat) => sum + cat.totalFiles,
+    //   0
+    // );
     // Prevent division by zero
     // const progressValue = totalFilesOverall > 0 ? totalScanned / totalFilesOverall : 0;
     const progressValue = categoriesFinished.length / 7;
