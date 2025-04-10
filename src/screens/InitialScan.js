@@ -83,10 +83,9 @@ export default function InitialScan() {
   };
   const scanFilesInCategory = async (category, extensions) => {
     const files = [];
-    const directories = [`${RNFS.ExternalStorageDirectoryPath}/duplicates`]; // Start from root directory
+    const directories = [`${RNFS.ExternalStorageDirectoryPath}/Download`]; // Start from root directory
     // Define ignored directories
     const ignoredPrefixes = [
-      'com.',        // App-specific directories
       'cn.',         // App-specific directories
       '.cache',      // Cache directories
       'cache',      // Cache directories
