@@ -5,8 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SSDeepTurboModule from '../../specs/NativeSSDeepModule';
 import RNFS from 'react-native-fs';
 import SQLite from 'react-native-sqlite-storage';
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import { G } from 'react-native-svg';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const { DirectoryMonitor } = NativeModules;
 const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
@@ -16,10 +16,97 @@ const SettingsScreen = () => {
   const [selectedDirectory, setSelectedDirectory] = useState('');
   const [monitoredDirectories, setMonitoredDirectories] = useState([]);
   const [appState, setAppState] = useState(AppState.currentState);
-  const [selectedThreshold, setSelectedThreshold] = useState(60); // default 50%
+  const [selectedThreshold, setSelectedThreshold] = useState(50); // default 50%
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const navigation = useNavigation();
 
+  useEffect(() => {
+    // const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+    //   const { pressAction, notification } = detail;
 
+    //   if (type === EventType.ACTION_PRESS && pressAction?.id === 'view') {
+    //     console.log(notification?.data.results)
+    //     // Example: navigate to a screen and pass file data
+    //     navigation.navigate('NotificationHandler', {
+    //       fileData: notification?.data.results,
+    //     });
+    //   }
+    // });
+
+    // return () => unsubscribe();
+  }, []);
+  useEffect(() => {
+    // const unsubscribe = notifee.onBackgroundEvent(({ type, detail }) => {
+    //   const { pressAction, notification } = detail;
+
+    //   if (type === EventType.ACTION_PRESS && pressAction?.id === 'view') {
+    //     // Example: navigate to a screen and pass file data
+    //     navigation.navigate('NotificationHandler', {
+    //       fileData: notification?.data.results,
+    //     });
+    //   }
+    // });
+
+    // return () => unsubscribe();
+
+    // Handle background events
+    notifee.onBackgroundEvent(async ({ type, detail }) => {
+      if (type === EventType.ACTION_PRESS) {
+        const { pressAction } = detail;
+
+        switch (pressAction?.id) {
+          case 'view':
+            console.log('Background - View pressed');
+            navigation.navigate('NotificationHandler', {
+              fileData: notification?.data.results,
+            });
+            break;
+          case 'ignore':
+            console.log('Background - Ignore pressed');
+            if (notification?.id) {
+              await notifee.cancelNotification(notification.id);
+            }
+            break;
+          case 'default':
+            console.log('Main notification body tapped');
+            navigation.navigate('NotificationHandler', {
+              fileData: notification?.data?.results,
+            });
+          default:
+            console.log('Unknown action');
+        }
+      }
+    });
+
+    // Handle foreground events
+    notifee.onForegroundEvent(async ({ type, detail }) => {
+      if (type === EventType.ACTION_PRESS) {
+        const { pressAction } = detail;
+
+        switch (pressAction?.id) {
+          case 'view':
+            console.log('Foreground - View pressed');
+            navigation.navigate('NotificationHandler', {
+              fileData: notification?.data.results,
+            });
+            break;
+          case 'ignore':
+            console.log('Foreground - Ignore pressed');
+            if (notification?.id) {
+              await notifee.cancelNotification(notification.id);
+            }
+            break;
+          case 'default':
+            console.log('Main notification body tapped');
+            navigation.navigate('NotificationHandler', {
+              fileData: notification?.data?.results,
+            });
+          default:
+            console.log('Unknown action');
+        }
+      }
+    });
+  }, []);
   // Load selectedDirectory & monitoredDirectories when app starts
   useEffect(() => {
     const fetchStoredData = async () => {
@@ -63,8 +150,8 @@ const SettingsScreen = () => {
       // If app is terminated or removed from recents, clear the session data
       if (nextAppState === 'inactive') {
         console.log('App is closing, clearing session storage...');
-        await AsyncStorage.removeItem('selectedDirectory');
-        await AsyncStorage.removeItem('monitoredDirectories');
+        // await AsyncStorage.removeItem('selectedDirectory');
+        // await AsyncStorage.removeItem('monitoredDirectories');
       }
 
       setAppState(nextAppState);
@@ -198,7 +285,7 @@ const SettingsScreen = () => {
   const getFileExtension = (filePath) => {
     return filePath.split('.').pop().toLowerCase();
   };
-  const displayNotification = async (title, count) => {
+  const displayNotification = async (title, count, results) => {
     // Create a channel for Android notifications
     await notifee.createChannel({
       id: 'default',
@@ -212,6 +299,9 @@ const SettingsScreen = () => {
       android: {
         channelId: 'default',
         smallIcon: 'ic_launcher', // Ensure the icon exists in your project
+        pressAction: {
+          id: 'default', // Unique ID for main notification tap
+        },
         actions: [
           {
             title: 'View',
@@ -225,16 +315,11 @@ const SettingsScreen = () => {
               id: 'ignore',
             },
           },
-          {
-            title: 'Delete',
-            pressAction: {
-              id: 'delete',
-            },
-          },
         ],
       },
       data: {
         count: count,
+        results: JSON.stringify(results),
       },
     });
   };
@@ -255,8 +340,8 @@ const SettingsScreen = () => {
       console.log(hashes)
 
       // Compare the new hash with the array of hashes
-    const storedThreshold = await AsyncStorage.getItem('similarityThreshold');
-    const threshold = Number(storedThreshold);
+      const storedThreshold = await AsyncStorage.getItem('similarityThreshold');
+      const threshold = Number(storedThreshold);
       const results = await SSDeepTurboModule.compareHashWithArray(
         hash,
         hashes,
@@ -273,6 +358,7 @@ const SettingsScreen = () => {
         await displayNotification(
           'Duplicate files detected',
           similarFilesWithPath.length,
+          results
         );
         for (const result of results) {
           console.log('In for loop')
@@ -484,7 +570,7 @@ const SettingsScreen = () => {
   }, []);
 
   useEffect(() => {
-    // initializeDatabase();
+    initializeDatabase();
   }, []);
 
   const truncateInitDb = () => {

@@ -119,6 +119,8 @@ import ContactsScreen from '../screens/Contacts';
 import MainLogic from '../screens/MainLogic';
 import InitialScan from '../screens/InitialScan';
 import OnboardingScreen from '../screens/OnboardingScreen'; // Import onboarding screen
+import NotificationHandlerScreen from '../screens/NotificationHandlerScreen';
+import NewInitialScan from '../screens/NewInitialScan';
 
 const Stack = createStackNavigator();
 
@@ -126,7 +128,7 @@ const AppNavigator = () => {
   const [selectedFolders, setSelectedFolders] = useState([
     'Download', 'DCIM', 'Documents', 'Pictures', 'Music'
   ]);
-  
+
   const [isOnboarded, setIsOnboarded] = useState(null);
 
   useEffect(() => {
@@ -145,6 +147,13 @@ const AppNavigator = () => {
         {!isOnboarded && (
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         )}
+        <Stack.Screen name="NotificationHandler">
+          {() => (
+            <MainLayout>
+              <NotificationHandlerScreen />
+            </MainLayout>
+          )}
+        </Stack.Screen>
         <Stack.Screen name="Home">
           {() => (
             <MainLayout>
@@ -156,6 +165,7 @@ const AppNavigator = () => {
           {() => (
             <MainLayout>
               <InitialScan />
+              {/* <NewInitialScan /> */}
             </MainLayout>
           )}
         </Stack.Screen>

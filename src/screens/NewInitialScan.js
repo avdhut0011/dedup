@@ -11,7 +11,7 @@ const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
 
 const { FileScannerModule } = NativeModules;
 
-export default function InitialScan() {
+export default function NewInitialScan() {
   const [scanBtnText, setScanBtnText] = useState('Start Files Scan');
   const [scanCompleted, setScanCompleted] = useState(false); // Track scan completion
   const navigation = useNavigation(); // Use navigation
@@ -22,7 +22,6 @@ export default function InitialScan() {
     text: { totalFiles: 0, duplicates: 0, scanned: 0 },
     pptx: { totalFiles: 0, duplicates: 0, scanned: 0 },
     documents: { totalFiles: 0, duplicates: 0, scanned: 0 },
-    excel: { totalFiles: 0, duplicates: 0, scanned: 0 },
     audio: { totalFiles: 0, duplicates: 0, scanned: 0 },
     pdfs: { totalFiles: 0, duplicates: 0, scanned: 0 },
     image: { totalFiles: 0, duplicates: 0, scanned: 0 },
@@ -79,7 +78,6 @@ export default function InitialScan() {
     text: ['.txt'],
     // pptx: ['.ppt', '.pptx'],
     // documents: ['.docx', '.doc'],
-    // excel: ['.xlsx', '.xls', '.csv'],
     // audio: ['.mp3', '.wav'],
     // image: ['.jpg', '.png', '.jpeg'],
     // pdfs: ['.pdf'],
@@ -153,55 +151,71 @@ export default function InitialScan() {
   const getFileExtension = filePath => {
     return filePath.split('.').pop().toLowerCase();
   };
-  const processFilesInCategory = async (filetype, files, extensions, threshold) => {
-    console.log('In processFilesInCategory: ' + filetype);
-    const category = filetype;
+// Modify processFilesInCategory to use parallel processing
+const processFilesInCategory = async (filetype, files, extensions, threshold) => {
+    console.log(`Processing ${files.length} files in ${filetype} category`);
+    
+    const batchSize = 2; // Process 10 files at a time
     const hashes = [];
     const duplicates = [];
-    for (const file of files) {
-      try { 
-        // Get file metadata (size, name)
-        const fileInfo = await RNFS.stat(file);
-        const fileSizeKB = (fileInfo.size / 1024).toFixed(2); // Convert to KB
-        const fileName = file.split('/').pop(); // Extract file name
-        const extension = await getFileExtension(file);
-        console.log(fileName);
-        // Compute SSDeep hash
-        const hash = await SSDeepTurboModule.hashFile(file);
-        console.log(hash)
-        // Fetch existing hashes for this category
-        const existingHashes = await fetchHashesFromDatabase(extension);
-        // Compare the hash with existing hashes
-        const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, threshold);
-        if (results.length > 0) {
-          // Duplicate(s) found
-          for (const result of results) {
-            const originalFileHash = result.hash; // Hash of the original file
-            const similarityScore = result.similarity; // Similarity score
-            // Fetch the original file's ID from the database
-            const originalFileId = await fetchFileIdByHash(originalFileHash);
-            // Insert the duplicate file into Files_Record
-            const duplicateFileId = await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
-            // Insert the duplicate relationship into Duplicates_Record
-            await insertHashIntoDuplicates(originalFileId, duplicateFileId, similarityScore);
-            duplicates.push({ file, similarity: similarityScore });
+    
+    // Process files in batches
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      
+      // Process all files in the batch in parallel
+      const batchResults = await Promise.all(
+        batch.map(async (file) => {
+          try {
+            const fileInfo = await RNFS.stat(file);
+            const fileSizeKB = (fileInfo.size / 1024).toFixed(2);
+            const fileName = file.split('/').pop();
+            const extension = await getFileExtension(file);
+            
+            const hash = await SSDeepTurboModule.hashFile(file);
+            const existingHashes = await fetchHashesFromDatabase(extension);
+            const results = await SSDeepTurboModule.compareHashWithArray(hash, existingHashes, threshold);
+            
+            if (results.length > 0) {
+              // Process duplicates
+              const duplicateOperations = results.map(async (result) => {
+                const originalFileId = await fetchFileIdByHash(result.hash);
+                const duplicateFileId = await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
+                await insertHashIntoDuplicates(originalFileId, duplicateFileId, result.similarity);
+                return { file, similarity: result.similarity };
+              });
+              
+              const dupes = await Promise.all(duplicateOperations);
+              return { file, hash, duplicates: dupes };
+            } else {
+              await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
+              return { file, hash, duplicates: [] };
+            }
+          } catch (error) {
+            console.warn(`Error processing file: ${file}, ${error.message}`);
+            return null;
           }
-        } else {
-          // No duplicates found, insert into Files_Record
-          await insertHashIntoDatabase(file, hash, extension, fileName, fileSizeKB);
+        })
+      );
+      
+      // Filter out null results and collect hashes/duplicates
+      const validResults = batchResults.filter(Boolean);
+      validResults.forEach(result => {
+        hashes.push({ file: result.file, hash: result.hash });
+        duplicates.push(...result.duplicates);
+      });
+      
+      // Update progress after each batch
+      setCategories(prev => ({
+        ...prev,
+        [filetype]: {
+          ...prev[filetype],
+          scanned: Math.min(i + batchSize, files.length),
+          totalFiles: files.length
         }
-        hashes.push({ file, hash });
-        setCategories((prev) => ({
-          ...prev,
-          [category]: {
-            totalFiles: files.length,
-            scanned: prev[category].scanned + 1
-          },
-        }));
-      } catch (error) {
-        console.warn(`Error processing file: ${file}, ${error.message}`);
-      }
+      }));
     }
+    
     return { hashes, duplicates };
   };
 
@@ -240,7 +254,7 @@ export default function InitialScan() {
         duplicateFiles, // Store duplicate file paths and similarity
       },
     }));
-    const progressValue = categoriesFinished.length / Object.keys(fileCategories).length;
+    const progressValue = categoriesFinished.length / fileCategories.length;
     setProgress(progressValue);
   };
   const insertInitialScanResults = (scanData) => {
@@ -263,7 +277,7 @@ export default function InitialScan() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScanProgressUI progress={progress} categories={categories} />
       <Button
-        title={isScanning ? "Scanning..." : scanBtnText}
+        title={isScanning ? "New_Scanning..." : scanBtnText}
         onPress={handleButtonPress}
         disabled={isScanning}
       />

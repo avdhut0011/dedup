@@ -22,7 +22,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
     private static final String TAG = "DirectoryMonitor";
     private final Set<String> allowedExtensions = new HashSet<>(Arrays.asList(
             ".txt", ".pdf", ".doc", ".docx", ".pptx", ".ppt",
-            ".csv", ".xlsx", ".mkv", ".mp3", ".mp4"));
+            ".csv", ".xlsx", ".xls", ".mkv", ".mp3", ".mp4"));
     private static final Set<String> ignoreFolders = new HashSet<>(Arrays.asList(
             "cn.", // App-specific directories
             ".cache", // Cache directories
@@ -32,6 +32,7 @@ public class DirectoryMonitorModule extends ReactContextBaseJavaModule {
             ".Thumbs", // Thumbnail cache
             ".StickerThumbs", // Thumbnail cache
             ".trashed",
+            ".Statuses",
             ".globalTrash",
             ".system_config",
             "MIUI", // Xiaomi-specific system files

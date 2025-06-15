@@ -4,6 +4,7 @@ import { PieChart } from 'react-native-chart-kit';
 import CpuUsage from '../components/CpuUsage';
 import StorageStats from '../components/StorageStats';
 import { useNavigation } from '@react-navigation/native';
+import notifee, { EventType } from '@notifee/react-native';
 //import DonutChart from "react-native-donut-chart";
 
 const { FileScannerModule } = NativeModules;

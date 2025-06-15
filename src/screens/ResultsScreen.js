@@ -7,6 +7,7 @@ const db = SQLite.openDatabase({ name: 'filehashes.db', location: 'default' });
 
 export default function ResultsScreen() {
   const [duplicates, setDuplicates] = useState([]);
+  const [duplicateStats, setDuplicateStats] = useState([]);
 
   const getDuplicateFiles = (callback) => {
     db.transaction((tx) => {
@@ -36,8 +37,40 @@ export default function ResultsScreen() {
       );
     });
   };
+  const getDuplicateStats = (callback) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `SELECT 
+            fr2.file_type AS type,
+            COUNT(*) AS total_duplicates,
+            SUM(fr2.file_size) AS total_size
+         FROM 
+            Duplicates_Record dr
+         JOIN 
+            Files_Record fr2 ON dr.duplicate_fid = fr2.id
+         GROUP BY 
+            fr2.file_type
+         ORDER BY 
+            total_duplicates DESC;`,
+        [],
+        (_, result) => {
+          let stats = {};
+          for (let i = 0; i < result.rows.length; i++) {
+            const row = result.rows.item(i);
+            stats[row.type] = {
+              totalDuplicates: row.total_duplicates,
+              totalSizeMB: (row.total_size / (1024)).toFixed(3) + ' MB',
+            };
+          }
+          callback(stats);
+        },
+        (error) => console.error('Error fetching duplicate stats:', error)
+      );
+    });
+  };
   useEffect(() => {
     getDuplicateFiles(setDuplicates);
+    getDuplicateStats(setDuplicateStats);
   }, []);
 
   // Function to render image or video preview
@@ -68,6 +101,14 @@ export default function ResultsScreen() {
     <View style={styles.container}>
       <Text style={styles.header}>Duplicate Files</Text>
 
+      {Object.entries(duplicateStats).map(([type, stat]) => (
+        <View key={type} style={{ flexDirection: 'row', marginVertical: 5 }}>
+          <Text style={{ width: 60 }}>{type.toUpperCase()}</Text>
+          <Text style={{ width: 120 }}>Duplicates: {stat.totalDuplicates}</Text>
+          <Text>Total Size: {stat.totalSizeMB}</Text>
+        </View>
+      ))}
+
       <FlatList
         data={duplicates}
         keyExtractor={(item) => item.id?.toString()}
@@ -80,7 +121,7 @@ export default function ResultsScreen() {
               {renderFilePreview(item.duplicate_path)}
               <View style={styles.fileInfo}>
                 <Text style={styles.fileName}>Duplicate File: {item.duplicate_name}</Text>
-                <Text style={styles.fileDetails}>Size: {(item.duplicate_size / 1024).toFixed(2)} MB</Text>
+                <Text style={styles.fileDetails}>Size: {(item.duplicate_size / 1024).toFixed(3)} MB</Text>
                 <Text style={styles.fileDetails}>Similarity: {item.similarity_score}%</Text>
                 <Text style={styles.filePath}>{item.duplicate_path}</Text>
               </View>
@@ -94,7 +135,7 @@ export default function ResultsScreen() {
               {renderFilePreview(item.original_path)}
               <View style={styles.fileInfo}>
                 <Text style={styles.fileName}>Original File: {item.original_name}</Text>
-                <Text style={styles.fileDetails}>Size: {(item.original_size / 1024).toFixed(2)} MB</Text>
+                <Text style={styles.fileDetails}>Size: {(item.original_size / 1024).toFixed(3)} MB</Text>
                 <Text style={styles.filePath}>{item.original_path}</Text>
               </View>
               <TouchableOpacity style={styles.deleteButton}>
